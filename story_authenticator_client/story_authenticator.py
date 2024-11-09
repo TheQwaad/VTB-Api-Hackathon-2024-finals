@@ -1,5 +1,4 @@
 from yandex_gpt_helper import YandexGptHelper, YandexGptModels
-import asyncio
 import os
 import random
 
@@ -16,14 +15,14 @@ OBJECTS_GETTER_MAX_TOKEN = 100
 
 FAKE_OBJECTS_GETTER_PROMPT = _load("prompts/fake_objects_getter.dat")
 FAKE_OBJECTS_GETTER_TEMPERATURE = 0.6
-FAKE_OBJECTS_GETTER_MAX_TOKEN = 100
+FAKE_OBJECTS_GETTER_MAX_TOKEN = 50
 FAKE_OBJECTS_COUNT = 9 # must be the same as in the prompt
 
 AUTH_ITERATIONS = 3 # must be not larger than the number of objects in story generator prompt
 
 VALIDATE_OBJECT_PROMPT = _load("prompts/validate_object.dat")
 VALIDATE_OBJECT_TEMPERATURE = 0.6
-VALIDATE_OBJECT_MAX_TOKEN = 30
+VALIDATE_OBJECT_MAX_TOKEN = 10
 VALIDATION_RESPONSE = {
     "success": ['да'],
     "fail": ['нет']
@@ -31,19 +30,17 @@ VALIDATION_RESPONSE = {
 
 class StoryAuthenticator:
 
-    def __init__(self):
+    def __init__(self, api_id, api_token):
         self._model = YandexGptHelper(
-            os.getenv('YANDEX_API_DIRECTORY'),
-            api_token=os.getenv('YANDEX_API_TOKEN'),
+            api_id,
+            api_token=api_token,
             model=YandexGptModels.PRO4
         )
         self._story = None
         self._objects = None
-        self._last_used = None
 
     async def generate_story(self):
         self._objects = None
-        self._last_used = None
         self._story = await self._model.make_message_request(
             STORY_GENERATOR_PROMPT,
             temperature=STORY_GENERATOR_TEMPERATURE,
@@ -82,11 +79,10 @@ class StoryAuthenticator:
                 await self._update_objects()
             except Exception as e:
                 raise e
-        if self._last_used is None:
-            self._last_used = -1
-        self._last_used += 1
         fake_objects = await self.get_fake_objects()
-        fake_objects.append(self._objects[self._last_used])
+        random.shuffle(self._objects)
+        fake_objects.append(self._objects[0])
+        random.shuffle(fake_objects)
         return fake_objects
 
     async def validate_object(self, obj):
@@ -98,13 +94,7 @@ class StoryAuthenticator:
             temperature=VALIDATE_OBJECT_TEMPERATURE,
             max_token=VALIDATE_OBJECT_MAX_TOKEN
         )
-        print(response)
         return response.lower() in VALIDATION_RESPONSE['success']
 
     def get_story(self):
         return self._story
-
-    async def get_objects(self):
-        if self._objects is None:
-            await self._update_objects()
-        return self._objects

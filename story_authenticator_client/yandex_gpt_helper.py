@@ -12,7 +12,7 @@ YANDEX_GPT_MODELS = {YandexGptModels.LITE3, YandexGptModels.PRO3, YandexGptModel
 
 
 class YandexGptHelper:
-    def __init__(self, directory, api_token=None, iam_token=None, model=YandexGptModels.LITE3):
+    def __init__(self, directory, api_token=None, iam_token=None, model=YandexGptModels.PRO4):
         self.directory = directory
         if api_token is not None and iam_token is not None:
             raise ValueError("Choose only one token")

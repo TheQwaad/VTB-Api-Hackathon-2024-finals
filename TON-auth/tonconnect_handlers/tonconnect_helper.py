@@ -87,6 +87,8 @@ class TonConnectWrapper:
         qr.make(fit=True)
         qr.print_ascii()
 
+        print('Link:', generated_url)
+
         for _ in range(300):
             await asyncio.sleep(1)
             if connector.connected:

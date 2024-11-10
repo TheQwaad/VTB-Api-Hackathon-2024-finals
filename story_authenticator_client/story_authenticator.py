@@ -46,7 +46,6 @@ class StoryAuthenticator:
             temperature=STORY_GENERATOR_TEMPERATURE,
             max_token=STORY_GENERATOR_MAX_TOKEN
         )
-
     async def _update_objects(self):
         if self._story is None:
             raise ValueError("Story is not yet generated.")
@@ -88,13 +87,8 @@ class StoryAuthenticator:
     async def validate_object(self, obj):
         if self._objects is None:
             await self._update_objects()
-        prompt = f"{VALIDATE_OBJECT_PROMPT}\nОбъект: {obj}\nИстория: {self._story}"
-        response = await self._model.make_message_request(
-            prompt,
-            temperature=VALIDATE_OBJECT_TEMPERATURE,
-            max_token=VALIDATE_OBJECT_MAX_TOKEN
-        )
-        return response.lower() in VALIDATION_RESPONSE['success']
+
+        return obj in self._objects
 
     def get_story(self):
         return self._story

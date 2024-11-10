@@ -21,4 +21,4 @@ async def generate_nft_metadata_url(name: str, description: str, image: str, use
             "image": image,
         }
     json_string = json.dumps(data)
-    return await upload_file(f'{user_id}_{name}_{uuid.UUID}_metadata.json', json_string.encode('utf-8'))
+    return await upload_file(f'{user_id}_{name}_{uuid.uuid4().hex}_metadata.json', json_string.encode('utf-8'))

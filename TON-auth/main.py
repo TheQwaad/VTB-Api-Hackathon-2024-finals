@@ -3,11 +3,12 @@ import asyncio
 from cryptography.fernet import Fernet
 from pytoniq_core import Address
 
+import utils.data_coders as coders
 from config_reader import config
 from tonconnect_handlers.tonconnect_helper import TonConnectWrapper
 from utils.get_nft_data import get_nft_data
 
-USER_ID = 1
+USER_ID = 123456
 
 async def before_launch_prepare():
     try:
@@ -56,14 +57,16 @@ async def main():
         return
 
     if nft_data:
-        print('good')
+        encrypted_id = nft_data.get('metadata', {}).get('description', '')
+        user_id = coders.decrypt(encrypted_id)
+        print(f'Authorized user id: {user_id}')
         return
 
     print('There is no nft on your wallet, do you want to mint one?')
     mint = input("Enter 'yes' or 'no': ")
     if mint.lower() == 'yes':
         from nft_handlers.nft_mint_helper import mint_nft
-        await mint_nft(address.to_str())
+        await mint_nft(USER_ID, address.to_str())
     else:
         print("Your nft is minting, pls wait and try again soon")
 

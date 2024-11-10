@@ -1,14 +1,14 @@
 import asyncio
 from datetime import datetime
 
+import qrcode
 from nacl.utils import random
 from pytonconnect import TonConnect
-import qrcode
 from pytonconnect.parsers import WalletInfo
 from pytoniq_core import Address
 
-from tonconnect_handlers.tc_storage import TcStorage
 from config_reader import config
+from tonconnect_handlers.tc_storage import TcStorage
 
 
 class TonConnectWrapper:

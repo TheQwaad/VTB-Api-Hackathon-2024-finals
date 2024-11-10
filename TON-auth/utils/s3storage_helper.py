@@ -1,10 +1,11 @@
 from io import BytesIO
 
-from aiobotocore.config import AioConfig
 import aioboto3
+from aiobotocore.config import AioConfig
 from botocore.exceptions import BotoCoreError, ClientError
 
 from config_reader import config
+
 
 async def upload_file(file_key: str, file: bytes) -> str:
     session = aioboto3.Session()

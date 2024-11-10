@@ -22,7 +22,7 @@ class AuthSession:
     async def get_objects(self):
         if not self.opened:
             self.opened = True
-            response = await self.authenticator.get_story()
+            response = await self.authenticator.get_auth_objects()
             return response
         return None
 

@@ -24,7 +24,7 @@ pip install -r requirements.txt
    TONCONNECT_MANIFEST_URL='https://storage.yandexcloud.net/kkotlyarenko-testing/tonconnect_manifest.json'
    TONCONNECT_KEY=''
    TONAPI_KEY='Your_tonapi_key'
-   WALLET_MNEMONIC='Your_wallet_mnemonic'
+   WALLET_MNEMONIC = "['word1', 'word2', 'word3', ...]"
    STORAGE_BUCKET='Your_storage_bucket'
    STORAGE_KEY='Your_storage_key'
    STORAGE_SECRET='Your_storage_secret'

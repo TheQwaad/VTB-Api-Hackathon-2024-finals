@@ -1,0 +1,9 @@
+pydantic~=2.9.2
+pydantic-settings~=2.6.1
+pytonconnect~=0.3.1
+qrcode~=8.0
+pytoniq~=0.1.40
+tonutils~=0.1.5
+aioboto3~=13.2.
+aiohttp~=3.10.10
+cryptography~=43.0.3

@@ -32,7 +32,7 @@ class RegisterView(APIView):
         return render(request, 'register.html')
 
     def post(self, request: Request):
-        # todo: hash passwords, generate mobile app verification token, lib for jwt generating & QR-s
+        # todo: generate mobile app verification token, lib for jwt generating & QR-s
         RegisterUserService.register(request)
         return redirect("index")
 

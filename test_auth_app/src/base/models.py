@@ -2,6 +2,7 @@ from __future__ import annotations
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.contrib.auth.hashers import make_password, check_password
 
 
 class BaseUser(AbstractBaseUser):
@@ -21,6 +22,13 @@ class BaseUser(AbstractBaseUser):
     )
     
     objects = models.Manager()
+
+    @classmethod
+    def make_password(cls, password: str) -> str:
+        return make_password(password)
+
+    def check_password(self, password: str) -> bool:
+        return check_password(password, self.password)
 
     class Meta:
         abstract = True

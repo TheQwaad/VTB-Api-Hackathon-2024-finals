@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.contrib.auth.hashers import make_password, check_password
+from django.utils.crypto import get_random_string
 
 
 class BaseUser(AbstractBaseUser):
@@ -51,6 +52,10 @@ class StoryAuthUser(BaseUser):
     Field made for security reasons
     todo: add 'mobile_change_requested' field for user to be able to change mobile with verification app
     """
+
+    def regenerate_app_token(self) -> None:
+        self.mobile_app_token = get_random_string(length=32)
+        self.save()
 
 
 class NftAuthUser(BaseUser):

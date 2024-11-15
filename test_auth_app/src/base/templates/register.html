@@ -3,6 +3,7 @@
     <div class="row justify-content-center">
         <div class="col-md-6">
             <form method="POST" action="{% url 'auth.register' %}">
+                {% csrf_token %}
                 <h2>Register</h2>
                 <div class="form-group">
                     <label for="username">Username</label>

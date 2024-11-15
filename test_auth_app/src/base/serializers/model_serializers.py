@@ -10,4 +10,6 @@ class StoryAuthUserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data['password'] = StoryAuthUser.make_password(validated_data['password'])
-        return StoryAuthUser.objects.create(**validated_data)
+        user: StoryAuthUser = StoryAuthUser.objects.create(**validated_data)
+        user.regenerate_app_token()
+        return user

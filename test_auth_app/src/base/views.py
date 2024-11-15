@@ -5,8 +5,11 @@ from rest_framework.request import Request
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
-from base.services.user_service import RegisterUserService
 from base.models import StoryAuthUser
+from base.serializers.model_serializers import StoryAuthUserSerializer
+from rest_framework.serializers import ValidationError
+from base.services.qr_code_service import QrCodeService
+from pathlib import Path
 
 
 class IndexView(APIView):
@@ -32,21 +35,37 @@ class RegisterView(APIView):
         return render(request, 'register.html')
 
     def post(self, request: Request):
-        # todo: generate mobile app verification token, lib for jwt generating & QR-s
-        RegisterUserService.register(request)
-        return redirect("index")
+        # todo: lib for jwt generating & QR-s
+        user_serializer = StoryAuthUserSerializer(data=request.data)
+        user_serializer.is_valid(raise_exception=True)
+        user: StoryAuthUser = user_serializer.save()
+        return redirect("auth.verify_app", user_id=user.id)
 
 
 class VerifyAppView(APIView):
-    def get(self, request: Request):
-        return render(request, 'index.html')
+    def get(self, request: Request, user_id: int):
+        user: StoryAuthUser = StoryAuthUser.objects.get(id=user_id)
+        if user is None:
+            raise ValidationError('Incorrect user_id')
+
+        img = QrCodeService.generate_qr(user.mobile_app_token) # todo url
+
+        return render(request, 'verify_app.html', {'img': img.svg_inline(scale=5)})
+
+
+class VerifyAppCheckView(APIView):
+    def get(self, request: Request, user_id: int):
+        user: StoryAuthUser = StoryAuthUser.objects.get(id=user_id)
+        if user is None:
+            raise ValidationError('Incorrect user_id')
+        token = request.POST.get('token')
+        if token is None or user.mobile_app_token != token:
+            raise ValidationError('Incorrect token')
+
+        raise ValueError('success') # todo give jwt
 
 
 class LoginView(APIView):
-    pass
-
-
-class Login2FAView(APIView):
     pass
 
 

@@ -33,8 +33,16 @@ class StoryAuthUser(BaseUser):
 
     story = models.TextField(
         'story',
-        null=False,
+        null=True,
+        default=None
     )
+
+    mobile_app_token = models.TextField('mobile_app_token', null=True, default=None)
+    is_mobile_app_verified = models.BooleanField(default=False, null=False)
+    """
+    Field made for security reasons
+    todo: add 'mobile_change_requested' field for user to be able to change mobile with verification app
+    """
 
 
 class NftAuthUser(BaseUser):

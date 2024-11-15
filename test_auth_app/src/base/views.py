@@ -1,6 +1,5 @@
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate, login, logout
@@ -8,26 +7,21 @@ from django.shortcuts import render, redirect
 from base.models import StoryAuthUser
 from base.serializers.model_serializers import StoryAuthUserSerializer
 from rest_framework.serializers import ValidationError
-from base.services.qr_code_service import QrCodeService
-from pathlib import Path
+import segno
 
 
 class IndexView(APIView):
-    # TODO: https://stackoverflow.com/questions/66879284/adding-two-factor-authentication-in-django-django-rest
-
-    # All in all: authenticate with standart django's authenticate (login + password) -> redirect on 2fa page -> he writes his story -> check, if correct, then login (web app, api с токенами лень)
-
-    # authentication_classes = [SessionAuthentication, BasicAuthentication]
-    # permission_classes = [IsAuthenticated]
-
     def get(self, request: Request):
         users = StoryAuthUser.objects.all()
         return render(request, 'index.html', {'users': users})
 
 
 class ProfileView(APIView):
-    # todo check auth here and in logout
-    pass
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request: Request):
+        return render(request, 'profile.html')
 
 
 class RegisterView(APIView):
@@ -35,10 +29,10 @@ class RegisterView(APIView):
         return render(request, 'register.html')
 
     def post(self, request: Request):
-        # todo: lib for jwt generating & QR-s
         user_serializer = StoryAuthUserSerializer(data=request.data)
         user_serializer.is_valid(raise_exception=True)
         user: StoryAuthUser = user_serializer.save()
+        login(request, user)
         return redirect("auth.verify_app", user_id=user.id)
 
 
@@ -48,9 +42,11 @@ class VerifyAppView(APIView):
         if user is None:
             raise ValidationError('Incorrect user_id')
 
-        img = QrCodeService.generate_qr(user.mobile_app_token) # todo url
+        verification_url = f"http://127.0.0.1/verify_app_check/{user.id}?token={user.mobile_app_token}" # todo gen via django tools
+        img = segno.make_qr(verification_url, error='h')
+        img_html = img.svg_inline(scale=5)
 
-        return render(request, 'verify_app.html', {'img': img.svg_inline(scale=5)})
+        return render(request, 'verify_app.html', {'img': img_html})
 
 
 class VerifyAppCheckView(APIView):
@@ -62,12 +58,23 @@ class VerifyAppCheckView(APIView):
         if token is None or user.mobile_app_token != token:
             raise ValidationError('Incorrect token')
 
-        raise ValueError('success') # todo give jwt
+        raise ValueError('success') # todo give jwt in JSON response
 
 
 class LoginView(APIView):
-    pass
+    # todo built-in auth tools: authenticate (after story-check - login)
+    def get(self, request: Request):
+        return render(request, "login.html")
+
+    def post(self, request: Request):
+        # todo authenticate(), generate story and send to mobile phone, redirect to a form with story options for client - after that, login user
+        pass
 
 
 class LogoutView(APIView):
-    pass
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request: Request):
+        logout(request)
+        return redirect("index")

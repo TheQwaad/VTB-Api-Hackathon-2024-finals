@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from base.models import StoryAuthUser, BaseUser
+from base.models import StoryAuthUser, BaseUser, NftAuthUser
 from django.contrib.auth.hashers import make_password
 
 
@@ -14,6 +14,12 @@ class StoryAuthUserSerializer(serializers.ModelSerializer):
         user.regenerate_app_token()
         user.regenerate_jwt()
         return user
+
+
+class NftAuthUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NftAuthUser
+        fields = '__all__'
 
 
 class VerifyMobileAppUserSerializer(serializers.Serializer):

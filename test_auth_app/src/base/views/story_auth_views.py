@@ -36,7 +36,7 @@ class VerifyAppView(APIView):
             user.regenerate_jwt()
             return Response(data={'jwt': user.jwt_token})
         except ValidationError as e:
-            return Response(data={'error': e.__str__()})
+            return Response(data={'error': e.detail})
 
 
 class LoginView(APIView):
@@ -97,7 +97,7 @@ class GetStoryView(APIView):
                 'story': story.story
             })
         except ValidationError as e:
-            return Response(data={'error': e.__str__()})
+            return Response(data={'error': e.detail})
 
 
 class LogoutView(APIView):

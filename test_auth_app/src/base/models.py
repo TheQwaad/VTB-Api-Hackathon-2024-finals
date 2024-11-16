@@ -55,9 +55,6 @@ class BaseUser(AbstractBaseUser):
         self.jwt_token = get_random_string(length=32)
         self.save()
 
-    class Meta:
-        abstract = True
-
 
 class StoryAuthUser(BaseUser):
     """

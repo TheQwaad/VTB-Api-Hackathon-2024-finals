@@ -89,7 +89,7 @@ DATABASES = {
 
 # Auth staff
 
-AUTH_USER_MODEL = 'base.StoryAuthUser'
+AUTH_USER_MODEL = 'base.BaseUser'
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

@@ -3,13 +3,17 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.views import APIView
 from django.shortcuts import render
-from base.models import StoryAuthUser
+from base.models import StoryAuthUser, NftAuthUser
 
 
 class IndexView(APIView):
     def get(self, request: Request):
-        users = StoryAuthUser.objects.all()
-        return render(request, 'index.html', {'users': users})
+        story_users = StoryAuthUser.objects.all()
+        nft_users = NftAuthUser.objects.all()
+        return render(request, 'index.html', {
+            'story_users': story_users,
+            'nft_users': nft_users
+        })
 
 
 class ProfileView(APIView):

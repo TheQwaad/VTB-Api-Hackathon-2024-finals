@@ -129,5 +129,7 @@ class Story(models.Model):
 
 
 class NftAuthUser(BaseUser):
-    """Todo: implement"""
-    pass
+    """
+       User who implement 2fa auth via TON
+    """
+    is_ton_connected = models.BooleanField('is_ton_connected', null=False, default=False)

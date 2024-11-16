@@ -1,14 +1,24 @@
 from django.urls import path
 
-from . import views
+from base.views import views, story_auth_views
 
 urlpatterns = [
     path("", views.IndexView.as_view(), name="index"),
     path("profile", views.ProfileView.as_view(), name="profile"),
-    path("register", views.RegisterView.as_view(), name="auth.register"),
-    path("verify_app/<int:user_id>", views.VerifyAppView.as_view(), name="auth.verify_app"),
-    path("login", views.LoginView.as_view(), name="auth.login"),
-    path("login_confirm/<int:user_id>", views.LoginConfirmView.as_view(), name="auth.login_confirm"),
-    path("story/show", views.GetStoryView.as_view(), name="story.show"),
-    path("logout", views.LogoutView.as_view(), name="auth.logout"),
+
+    # story auth flow
+    path("story/register", story_auth_views.RegisterView.as_view(), name="auth.register"),
+    path("story/verify_app/<int:user_id>", story_auth_views.VerifyAppView.as_view(), name="auth.verify_app"),
+    path("story/login", story_auth_views.LoginView.as_view(), name="auth.login"),
+    path("story/login_confirm/<int:user_id>", story_auth_views.LoginConfirmView.as_view(), name="auth.login_confirm"),
+    path("story/story/show", story_auth_views.GetStoryView.as_view(), name="story.show"),
+    path("story/logout", story_auth_views.LogoutView.as_view(), name="auth.logout"),
+
+    # NFT auth flow
+    path("nft/register", story_auth_views.RegisterView.as_view(), name="nft_auth.register"),
+    path("nft/verify_app/<int:user_id>", story_auth_views.VerifyAppView.as_view(), name="nft_auth.verify_app"),
+    path("nft/login", story_auth_views.LoginView.as_view(), name="nft_auth.login"),
+    path("nft/login_confirm/<int:user_id>", story_auth_views.LoginConfirmView.as_view(), name="nft_auth.login_confirm"),
+    path("nft/story/show", story_auth_views.GetStoryView.as_view(), name="story.show"),
+    path("nft/logout", story_auth_views.LogoutView.as_view(), name="nft_auth.logout"),
 ]

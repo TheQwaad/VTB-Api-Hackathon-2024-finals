@@ -11,3 +11,13 @@
 7. ```python3 manage.py migrate``` - migrate db (it would be simple sqlite database)
 8. ```python3 manage.py runserver``` - start application
 9. Enjoy
+
+## Tips
+#### To change auth type replace
+```python3
+AUTH_USER_MODEL = 'base.StoryAuthUser'
+```
+in ```TestAuthApp/settings.py``` with
+```python3
+AUTH_USER_MODEL = 'base.NftAuthUser'
+```

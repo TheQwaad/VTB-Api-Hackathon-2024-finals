@@ -34,6 +34,9 @@
                 <a class="nav-link" href="{% url 'profile' %}">Profile</a>
             </li>
             <li class="nav-item">
+                <div class="nav-link">Story flow:</div>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link" href="{% url 'auth.register' %}">Register</a>
             </li>
             <li class="nav-item">
@@ -41,6 +44,18 @@
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'auth.logout' %}">Logout</a>
+            </li>
+            <li class="nav-item">
+                <div class="nav-link">TON flow:</div>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'nft_auth.register' %}">Register</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'nft_auth.login' %}">Login</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'nft_auth.logout' %}">Logout</a>
             </li>
         </ul>
     </div>

@@ -1,14 +1,15 @@
+import segno
+from asgiref.sync import sync_to_async
+from django.http import HttpResponseServerError, JsonResponse
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
-from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import login, logout
 from django.shortcuts import render, redirect
 from base.models import NftAuthUser
 from base.serializers.model_serializers import LoginUserSerializer, NftAuthUserSerializer
-from rest_framework.serializers import ValidationError
-from base.services.qr_service import QrService
+from base.services.tonconnect_handlers.tonconnect_helper import TonConnectWrapper
 
 
 class RegisterView(APIView):
@@ -23,19 +24,33 @@ class RegisterView(APIView):
 
 
 class VerifyRegisterView(APIView):
-    def get(self, request: Request, user_id: int):
-        user: NftAuthUser = NftAuthUser.objects.get_or_fail(id=user_id)
-        # TODO generate ton QR instead of basic. PLEASE USE segno - I cant use qrcode locally
-        img_html = QrService.generate_mobile_verify_qr(user)
-        return render(request, 'nft_auth/verify_app.html', {'img': img_html})
-
-    def post(self, request: Request, user_id: int):
+    async def get(self, request, user_id: int):
         try:
-            # TODO set flag in DB & validate
-            user: NftAuthUser = NftAuthUser.objects.get_or_fail(id=user_id)
-            return redirect('nft_auth.login')
-        except ValidationError as e:
-            return Response(data={'error': e.__str__()})
+            print(0)
+            user = await sync_to_async(NftAuthUser.objects.get)(id=user_id)
+            print(1)
+            connector = TonConnectWrapper(user_id=user_id)
+            wallets = await connector.get_wallet_list()
+            wallet_names = [wallet["name"] for wallet in wallets]
+            print(2)
+            return render(request, "nft_auth/verify_app.html", {"wallet_names": wallet_names, "user_id": user_id})
+        except NftAuthUser.DoesNotExist:
+            return HttpResponseServerError("User not found")
+        except Exception as e:
+            return HttpResponseServerError(f"Error: {str(e)}")
+
+    async def post(self, request, user_id: int):
+        try:
+            user = await sync_to_async(NftAuthUser.objects.get)(id=user_id)
+            wallet_name = request.POST.get("wallet_name")
+            generated_url = await TonConnectWrapper(user_id=user_id).generate_connection_url(wallet_name)
+            qr = segno.make(generated_url)
+            qr_path = f"media/qrcodes/user_{user_id}_{wallet_name}.png"
+            qr.save(qr_path)
+
+            return JsonResponse({'status': 'success', 'qr_code_url': f"/{qr_path}"})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 
 class LoginView(APIView):

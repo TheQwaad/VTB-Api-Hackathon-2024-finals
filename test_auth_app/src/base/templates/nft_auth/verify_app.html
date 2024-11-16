@@ -1,11 +1,70 @@
 {% extends 'template.html' %}
 {% block content %}
-    <div class="row justify-content-center">
-        <div class="col-md-6 justify-content-center">
-            <h2>Scan QR to connect to TON</h2>
+<div class="row justify-content-center">
+    <div class="col-md-6 justify-content-center">
+        <h2>Select Wallet to Connect</h2>
+        <form id="walletForm">
+            <select id="walletSelect" name="wallet_name" class="form-control">
+                <option value="" disabled selected>Choose your wallet</option>
+                {% for wallet_name in wallet_names %}
+                    <option value="{{ wallet_name }}">{{ wallet_name }}</option>
+                {% endfor %}
+            </select>
             <br>
-            {{ img | safe }}
-            <br>
-        </div>
+            <button type="button" id="generateQrBtn" class="btn btn-primary">Generate QR</button>
+        </form>
+        <br>
+        <div id="qrCodeContainer"></div>
+        <p id="status"></p>
     </div>
+</div>
+
+<script>
+    document.getElementById("generateQrBtn").addEventListener("click", async () => {
+        const walletName = document.getElementById("walletSelect").value;
+
+        if (!walletName) {
+            alert("Please select a wallet!");
+            return;
+        }
+
+        const response = await fetch("{% url 'verify_register' user_id=user.id %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify({ wallet_name: walletName })
+        });
+
+        const data = await response.json();
+        if (data.status === "success") {
+            document.getElementById("qrCodeContainer").innerHTML = `
+                <img src="${data.qr_code_url}" alt="Scan QR Code">
+            `;
+            waitForConnection();
+        } else {
+            alert(data.message);
+        }
+    });
+
+    async function waitForConnection() {
+        document.getElementById("status").innerText = "Waiting for connection...";
+        for (let i = 0; i < 300; i++) {  // Таймаут 300 секунд
+            const response = await fetch("{% url 'verify_register_status' user_id=user.id %}");
+            const data = await response.json();
+
+            if (data.status === "connected") {
+                alert(`Wallet connected: ${data.address}`);
+                window.location.href = "{% url 'nft_auth:login' %}";
+                return;
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 1000));  // Ждем 1 секунду
+        }
+
+        alert("Connection timeout.");
+        document.getElementById("status").innerText = "Connection timeout.";
+    }
+</script>
 {% endblock %}

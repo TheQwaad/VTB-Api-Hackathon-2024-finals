@@ -7,6 +7,7 @@ from django.utils.crypto import get_random_string
 from rest_framework.serializers import ValidationError
 from datetime import timedelta
 from django.utils.timezone import now
+from base.services.auth_services import StoryAuthService
 
 
 class CustomManager(models.Manager):
@@ -68,6 +69,10 @@ class StoryAuthUser(BaseUser):
     mobile_app_token = models.TextField('mobile_app_token', null=True, default=None)
     mobile_identifier = models.TextField('mobile_identifier', null=True, default=None)
 
+    @classmethod
+    def get_by_mobile_credentials(cls, jwt: str, mobile_identifier: str) -> StoryAuthUser:
+        return cls.objects.get_or_fail(jwt_token=jwt, mobile_identifier=mobile_identifier)
+
     def regenerate_app_token(self) -> None:
         self.mobile_app_token = get_random_string(length=32)
         self.save()
@@ -110,11 +115,14 @@ class Story(models.Model):
 
     @classmethod
     def generate_story(cls, user: StoryAuthUser) -> Story:
+        auth_service = StoryAuthService()
+        auth_service.gen_story()
+
         story = Story()
         story.user = user
-        story.story = 'Text of story'
-        story.set_correct_options(['1', '2', '3'])
-        story.set_incorrect_options(['other options', 'some incorrect'])
+        story.story = auth_service.get_story()
+        story.set_correct_options(auth_service.get_correct_option())
+        story.set_incorrect_options(auth_service.get_incorrect_option())
         return story.save()
 
 

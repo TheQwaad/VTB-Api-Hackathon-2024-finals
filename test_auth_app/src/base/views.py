@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
 from base.models import StoryAuthUser
-from base.serializers.model_serializers import StoryAuthUserSerializer, VerifyMobileAppUserSerializer, LoginUserSerializer
+from base.serializers.model_serializers import StoryAuthUserSerializer, VerifyMobileAppUserSerializer, LoginUserSerializer, MobileSerializer
 from rest_framework.serializers import ValidationError
 from base.services.qr_service import QrService
 
@@ -43,11 +43,14 @@ class VerifyAppView(APIView):
         return render(request, 'verify_app.html', {'img': img_html})
 
     def post(self, request: Request, user_id: int):
-        user: StoryAuthUser = StoryAuthUser.objects.get_or_fail(id=user_id)
-        serializer = VerifyMobileAppUserSerializer(user, data=request.data)
-        user = serializer.verify_mobile_app()
-        user.regenerate_jwt()
-        return Response(data={'jwt': user.jwt_token})
+        try:
+            user: StoryAuthUser = StoryAuthUser.objects.get_or_fail(id=user_id)
+            serializer = VerifyMobileAppUserSerializer(user, data=request.data)
+            user = serializer.verify_mobile_app()
+            user.regenerate_jwt()
+            return Response(data={'jwt': user.jwt_token})
+        except ValidationError as e:
+            return Response(data={'error': e.__str__()})
 
 
 class LoginView(APIView):
@@ -85,6 +88,28 @@ class LoginConfirmView(APIView):
 
         login(request, user)
         return redirect('profile')
+
+
+class GetStoryView(APIView):
+    def post(self, request: Request):
+        try:
+            serializer = MobileSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            user = StoryAuthUser.get_by_mobile_credentials(
+                serializer.validated_data['jwt_token'],
+                serializer.validated_data['mobile_identifier']
+            )
+            story = user.story_set.get()
+            if story is None or story.is_expired():
+                raise ValidationError('All your stories expired')
+
+            user.regenerate_jwt()
+            return Response(data={
+                'jwt': user.jwt_token,
+                'story': story.story
+            })
+        except ValidationError as e:
+            return Response(data={'error': e.__str__()})
 
 
 class LogoutView(APIView):

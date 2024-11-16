@@ -43,3 +43,8 @@ class VerifyMobileAppUserSerializer(serializers.Serializer):
 class LoginUserSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150, required=True, allow_null=False)
     password = serializers.CharField(min_length=4, max_length=150, required=True, allow_null=False)
+
+
+class MobileSerializer(serializers.Serializer):
+    jwt_token = serializers.CharField(max_length=32, required=True, allow_null=False)
+    mobile_identifier = serializers.CharField(max_length=255, required=True, allow_null=False)

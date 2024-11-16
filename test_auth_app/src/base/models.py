@@ -5,6 +5,8 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.contrib.auth.hashers import make_password, check_password
 from django.utils.crypto import get_random_string
 from rest_framework.serializers import ValidationError
+from datetime import timedelta
+from django.utils.timezone import now
 
 
 class CustomManager(models.Manager):
@@ -59,15 +61,61 @@ class BaseUser(AbstractBaseUser):
 class StoryAuthUser(BaseUser):
     """
     User who implement 2fa auth via stories
+    property: story_set
     """
+    # todo just related model for both auth flows easier usage
 
-    story = models.TextField('story', null=True, default=None)
     mobile_app_token = models.TextField('mobile_app_token', null=True, default=None)
     mobile_identifier = models.TextField('mobile_identifier', null=True, default=None)
 
     def regenerate_app_token(self) -> None:
         self.mobile_app_token = get_random_string(length=32)
         self.save()
+
+    def regenerate_story(self) -> None:
+        self.story_set.all().delete()
+        Story.generate_story(self)
+
+
+def expriration_time():
+    return now() + timedelta(minutes=Story.EXPIRATION_TIME)
+
+
+class Story(models.Model):
+    EXPIRATION_TIME = 2
+    __OPTION_DELIMITER = '#####'
+
+    user = models.ForeignKey(StoryAuthUser, on_delete=models.CASCADE)
+    story = models.TextField('story', max_length=2000, null=False)
+    correct_options: str = models.TextField('correct_options', max_length=1000, null=False)
+    incorrect_options: str = models.TextField('incorrect_options', max_length=1000, null=False)
+    expires_at = models.DateTimeField(null=False, default=expriration_time)
+
+    objects = models.Manager()
+
+    def is_expired(self) -> bool:
+        return now() >= self.expires_at
+
+    def get_incorrect_options(self) -> list[str]:
+        return self.incorrect_options.split(self.__OPTION_DELIMITER)
+
+    def set_incorrect_options(self, options: list[str]) -> None:
+        self.incorrect_options = self.__OPTION_DELIMITER.join(options)
+
+    def get_correct_options(self) -> list[str]:
+        return self.correct_options.split(self.__OPTION_DELIMITER)
+
+    def set_correct_options(self, options: list[str]) -> None:
+        self.correct_options = self.__OPTION_DELIMITER.join(options)
+
+    @classmethod
+    def generate_story(cls, user: StoryAuthUser) -> Story:
+        story = Story()
+        story.user = user
+        story.story = 'Text of story'
+        story.set_correct_options(['1', '2', '3'])
+        story.set_incorrect_options(['other options', 'some incorrect'])
+        return story.save()
 
 
 class NftAuthUser(BaseUser):

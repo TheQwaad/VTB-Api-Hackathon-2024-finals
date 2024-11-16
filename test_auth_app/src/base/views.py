@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
 from base.models import StoryAuthUser
-from base.serializers.model_serializers import StoryAuthUserSerializer, VerifyMobileAppUserSerializer
+from base.serializers.model_serializers import StoryAuthUserSerializer, VerifyMobileAppUserSerializer, LoginUserSerializer
 from rest_framework.serializers import ValidationError
 from base.services.qr_service import QrService
 
@@ -55,24 +55,36 @@ class LoginView(APIView):
         return render(request, "login.html")
 
     def post(self, request: Request):
-        user = StoryAuthUser.authenticate(
-            request.data.get('username'),
-            request.data.get('password')
-        )
-        return Response(data={
-            'user': user.__str__(),
-            'req': request.data
+        serializer = LoginUserSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = StoryAuthUser.authenticate(serializer.validated_data['username'], serializer.validated_data['password'])
+        user.regenerate_story()
+        return redirect('auth.login_confirm', user_id=user.id)
+
+
+class LoginConfirmView(APIView):
+    def get(self, request: Request, user_id: int):
+        user: StoryAuthUser = StoryAuthUser.objects.get_or_fail(id=user_id)
+        story = user.story_set.get()
+        return render(request, "login_confirm.html", {
+            'options': story.get_correct_options() + story.get_incorrect_options(),
+            'user_id': user.id
         })
-        # todo authenticate(), generate story and send to mobile phone, redirect to a form with story options for client - after that, login user
-        pass
 
+    def post(self, request: Request, user_id: int):
+        chosen_option = request.POST.get('chosen_option')
+        if chosen_option is None:
+            raise ValidationError('You must choose story option')
 
-class LoginVerifyStoryView(APIView):
-    def get(self, request: Request):
-        return render(request, "login.html")
+        user: StoryAuthUser = StoryAuthUser.objects.get_or_fail(id=user_id)
+        story = user.story_set.get()
+        if story is None or story.is_expired():
+            raise ValidationError('Your story verification time expired')
+        if chosen_option not in story.get_correct_options():
+            raise ValidationError('You chose incorrect option')
 
-    def post(self, request: Request):
-        pass
+        login(request, user)
+        return redirect('profile')
 
 
 class LogoutView(APIView):

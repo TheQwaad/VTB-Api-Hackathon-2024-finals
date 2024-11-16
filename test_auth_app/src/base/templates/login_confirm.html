@@ -1,0 +1,20 @@
+{% extends 'template.html' %}
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <form method="POST" action="{% url 'auth.login_confirm' user_id=user_id %}">
+                {% csrf_token %}
+                <h2>Confirm login</h2>
+                <div class="form-group">
+                    <label for="chosen_option">Example select</label>
+                    <select class="form-control" id="chosen_option" name="chosen_option">
+                        {% for option in options %}
+                            <option>{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from base.models import StoryAuthUser
+from base.models import StoryAuthUser, BaseUser
 from django.contrib.auth.hashers import make_password
 
 
@@ -38,3 +38,8 @@ class VerifyMobileAppUserSerializer(serializers.Serializer):
 
     def update(self, instance, validated_data):
         super().update(instance, validated_data)
+
+
+class LoginUserSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=150, required=True, allow_null=False)
+    password = serializers.CharField(min_length=4, max_length=150, required=True, allow_null=False)

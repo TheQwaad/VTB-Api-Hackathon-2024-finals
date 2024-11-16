@@ -61,6 +61,8 @@ class LoginView(APIView):
         serializer = LoginUserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = StoryAuthUser.authenticate(serializer.validated_data['username'], serializer.validated_data['password'])
+        if not user.is_mobile_verified():
+            return redirect("auth.verify_app", user_id=user.id)
         user.regenerate_story()
         return redirect('auth.login_confirm', user_id=user.id)
 

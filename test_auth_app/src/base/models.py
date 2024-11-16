@@ -64,7 +64,6 @@ class StoryAuthUser(BaseUser):
     User who implement 2fa auth via stories
     property: story_set
     """
-    # todo just related model for both auth flows easier usage
 
     mobile_app_token = models.TextField('mobile_app_token', null=True, default=None)
     mobile_identifier = models.TextField('mobile_identifier', null=True, default=None)
@@ -72,6 +71,9 @@ class StoryAuthUser(BaseUser):
     @classmethod
     def get_by_mobile_credentials(cls, jwt: str, mobile_identifier: str) -> StoryAuthUser:
         return cls.objects.get_or_fail(jwt_token=jwt, mobile_identifier=mobile_identifier)
+
+    def is_mobile_verified(self) -> bool:
+        return self.mobile_identifier is not None
 
     def regenerate_app_token(self) -> None:
         self.mobile_app_token = get_random_string(length=32)

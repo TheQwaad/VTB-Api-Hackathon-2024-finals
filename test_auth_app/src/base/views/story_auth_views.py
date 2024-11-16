@@ -13,7 +13,7 @@ from base.services.qr_service import QrService
 
 class RegisterView(APIView):
     def get(self, request: Request):
-        return render(request, 'register.html')
+        return render(request, 'story_auth/register.html')
 
     def post(self, request: Request):
         user_serializer = StoryAuthUserSerializer(data=request.data)
@@ -26,7 +26,7 @@ class VerifyAppView(APIView):
     def get(self, request: Request, user_id: int):
         user: StoryAuthUser = StoryAuthUser.objects.get_or_fail(id=user_id)
         img_html = QrService.generate_mobile_verify_qr(user)
-        return render(request, 'verify_app.html', {'img': img_html})
+        return render(request, 'story_auth/verify_app.html', {'img': img_html})
 
     def post(self, request: Request, user_id: int):
         try:
@@ -41,7 +41,7 @@ class VerifyAppView(APIView):
 
 class LoginView(APIView):
     def get(self, request: Request):
-        return render(request, "login.html")
+        return render(request, "story_auth/login.html")
 
     def post(self, request: Request):
         serializer = LoginUserSerializer(data=request.data)
@@ -57,7 +57,7 @@ class LoginConfirmView(APIView):
     def get(self, request: Request, user_id: int):
         user: StoryAuthUser = StoryAuthUser.objects.get_or_fail(id=user_id)
         story = user.story_set.get()
-        return render(request, "login_confirm.html", {
+        return render(request, "story_auth/login_confirm.html", {
             'options': story.get_correct_options() + story.get_incorrect_options(),
             'user_id': user.id
         })

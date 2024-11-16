@@ -1,20 +1,26 @@
+from story_authenticator.story_authenticator import StoryAuthenticator
+import os
+
 class StoryAuthService:
-    __incorrect_options = ['1', '2', 'correct']
-    __correct_options = ['1afdfa', '2_ssd', 'incorrect']
-    __story = 'Test stoory kdjdjopwsfk'
+    __incorrect_options = None
+    __correct_options = None
+    __story = None
+
 
     def __init__(self):
-        pass
+        self.__authenticator = StoryAuthenticator(os.getenv("YAGPT_DIRECTORY_ID"), os.getenv("YAGPT_API_TOKEN"))
 
-    def gen_story(self):
-        # todo: Kirill do stuff here
-        pass
+    async def gen_story(self):
+        await self.__authenticator.generate_story()
+        self.__story = await self.__authenticator.get_story()
+        self.__correct_options = await self.__authenticator.get_objects()
+        self.__incorrect_options = await self.__authenticator.get_fake_objects()
 
-    def get_story(self) -> str:
+    async def get_story(self) -> str:
         return self.__story
 
-    def get_correct_option(self) -> list[str]:
+    async def get_correct_option(self) -> list[str]:
         return self.__correct_options
 
-    def get_incorrect_option(self) -> list[str]:
+    async def get_incorrect_option(self) -> list[str]:
         return self.__incorrect_options

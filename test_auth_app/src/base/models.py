@@ -1,8 +1,11 @@
 from __future__ import annotations
+
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.contrib.auth.hashers import make_password, check_password
+from django.utils import timezone
 from django.utils.crypto import get_random_string
 from rest_framework.serializers import ValidationError
 from datetime import timedelta
@@ -130,3 +133,15 @@ class NftAuthUser(BaseUser):
        User who implement 2fa auth via TON
     """
     is_ton_connected = models.BooleanField('is_ton_connected', null=False, default=False)
+
+
+User = get_user_model()
+
+class WebSocketAuthToken(models.Model):
+    token = models.CharField(max_length=64, unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    expires_at = models.DateTimeField()
+    used = models.BooleanField(default=False)
+
+    def is_valid(self):
+        return not self.used and self.expires_at >= timezone.now()

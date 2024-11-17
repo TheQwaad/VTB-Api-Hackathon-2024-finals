@@ -19,4 +19,5 @@ urlpatterns = [
     path("nft/verify_app/<int:user_id>", nft_auth_views.VerifyRegisterView.as_view(), name="nft_auth.verify_app"),
     path("nft/login", nft_auth_views.LoginView.as_view(), name="nft_auth.login"),
     path("nft/logout", nft_auth_views.LogoutView.as_view(), name="nft_auth.logout"),
+    path('nft/complete-login/', nft_auth_views.complete_login, name='complete_login'),
 ]

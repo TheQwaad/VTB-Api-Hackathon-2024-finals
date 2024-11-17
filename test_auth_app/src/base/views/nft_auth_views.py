@@ -1,14 +1,18 @@
+import json
+
+from asgiref.sync import sync_to_async
+from django.http import HttpResponseServerError, JsonResponse
+from django.utils import timezone
+from django.views import View
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
-from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import login, logout
 from django.shortcuts import render, redirect
-from base.models import NftAuthUser
+from base.models import NftAuthUser, WebSocketAuthToken
 from base.serializers.model_serializers import LoginUserSerializer, NftAuthUserSerializer
-from rest_framework.serializers import ValidationError
-from base.services.qr_service import QrService
+from base.services.tonconnect_handlers.tonconnect_helper import TonConnectWrapper
 
 
 class RegisterView(APIView):
@@ -22,33 +26,60 @@ class RegisterView(APIView):
         return redirect("nft_auth.verify_app", user_id=user.id)
 
 
-class VerifyRegisterView(APIView):
-    def get(self, request: Request, user_id: int):
-        user: NftAuthUser = NftAuthUser.objects.get_or_fail(id=user_id)
-        # TODO generate ton QR instead of basic. PLEASE USE segno - I cant use qrcode locally
-        img_html = QrService.generate_mobile_verify_qr(user)
-        return render(request, 'nft_auth/verify_app.html', {'img': img_html})
-
-    def post(self, request: Request, user_id: int):
+class VerifyRegisterView(View):
+    async def get(self, request, user_id: int):
         try:
-            # TODO set flag in DB & validate
-            user: NftAuthUser = NftAuthUser.objects.get_or_fail(id=user_id)
-            return redirect('nft_auth.login')
-        except ValidationError as e:
-            return Response(data={'error': e.__str__()})
+            connector = TonConnectWrapper(user_id=user_id)
+            wallets = await connector.get_wallet_list()
+            wallet_names = [wallet["name"] for wallet in wallets]
+            response = await sync_to_async(render)(request, "nft_auth/verify_app.html",
+                                                   {"wallet_names": wallet_names, "user_id": user_id})
+            return response
+        except NftAuthUser.DoesNotExist:
+            return await sync_to_async(HttpResponseServerError)("User not found")
+        except Exception as e:
+            return await sync_to_async(HttpResponseServerError)(f"Error: {str(e)}")
 
 
-class LoginView(APIView):
-    def get(self, request: Request):
+class LoginView(View):
+    async def get(self, request: Request):
         return render(request, "nft_auth/login.html")
 
-    def post(self, request: Request):
-        serializer = LoginUserSerializer(data=request.data)
+    async def post(self, request: Request):
+        serializer = LoginUserSerializer(data=request.POST)
         serializer.is_valid(raise_exception=True)
-        user = NftAuthUser.authenticate(serializer.validated_data['username'], serializer.validated_data['password'])
-        # TODO send ton request & validate is Nft present
-        login(request, user)
-        return redirect('index', user_id=user.id)
+        user = await sync_to_async(NftAuthUser.authenticate)(serializer.validated_data['username'], serializer.validated_data['password'])
+        try:
+            connector = TonConnectWrapper(user_id=user.id)
+            wallets = await connector.get_wallet_list()
+            wallet_names = [wallet["name"] for wallet in wallets]
+            response = await sync_to_async(render)(request, "nft_auth/verify_app.html",
+                                                   {"wallet_names": wallet_names, "user_id": user.id})
+            return response
+        except NftAuthUser.DoesNotExist:
+            return await sync_to_async(HttpResponseServerError)("User not found")
+        except Exception as e:
+            return await sync_to_async(HttpResponseServerError)(f"Error: {str(e)}")
+
+
+def complete_login(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        auth_token = data.get('auth_token')
+        if not auth_token:
+            return JsonResponse({'status': 'error', 'message': 'Auth token is required'}, status=400)
+        try:
+            token_obj = WebSocketAuthToken.objects.get(token=auth_token, used=False)
+            if token_obj.expires_at < timezone.now():
+                return JsonResponse({'status': 'error', 'message': 'Auth token expired'}, status=400)
+            login(request, token_obj.user)
+            token_obj.used = True
+            token_obj.save()
+            return JsonResponse({'status': 'success'})
+        except WebSocketAuthToken.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Invalid auth token'}, status=400)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 
 class LogoutView(APIView):

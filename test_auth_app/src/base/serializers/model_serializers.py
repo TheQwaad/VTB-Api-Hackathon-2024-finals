@@ -21,6 +21,11 @@ class NftAuthUserSerializer(serializers.ModelSerializer):
         model = NftAuthUser
         fields = '__all__'
 
+    def create(self, validated_data):
+        validated_data['password'] = NftAuthUser.make_password(validated_data['password'])
+        user: StoryAuthUser = NftAuthUser.objects.create(**validated_data)
+        return user
+
 
 class VerifyMobileAppUserSerializer(serializers.Serializer):
     token = serializers.CharField(max_length=1500, required=True, allow_null=False)

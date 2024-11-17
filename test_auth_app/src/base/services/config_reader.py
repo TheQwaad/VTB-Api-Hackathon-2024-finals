@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     storage_key: SecretStr
     storage_secret: SecretStr
     storage_endpoint: SecretStr
+    yaapi_key: SecretStr
+    yadir_key: SecretStr
 
     model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8')
 

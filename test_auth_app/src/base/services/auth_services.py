@@ -1,4 +1,5 @@
 from story_authenticator.story_authenticator import StoryAuthenticator
+from base.services.config_reader import config
 import os
 
 class StoryAuthService:
@@ -8,7 +9,7 @@ class StoryAuthService:
 
 
     def __init__(self):
-        self.__authenticator = StoryAuthenticator("b1ghcpo9t3li3g1oqu58", "AQVNwkwtqNESYDFiqid2ewd07YXDZa6FIikZEQX0")
+        self.__authenticator = StoryAuthenticator(config.yadir_key, config.yaapi_key)
 
     def gen_story(self):
         self.__authenticator.generate_story()

@@ -1,11 +1,115 @@
 {% extends 'template.html' %}
 {% block content %}
-    <div class="row justify-content-center">
-        <div class="col-md-6 justify-content-center">
-            <h2>Scan QR to connect to TON</h2>
+<div class="row justify-content-center">
+    <div class="col-md-6 justify-content-center">
+        <h2>Select Wallet to Connect</h2>
+        <form id="walletForm">
+            <select id="walletSelect" name="wallet_name" class="form-control">
+                <option value="" disabled selected>Choose your wallet</option>
+                {% for wallet_name in wallet_names %}
+                    <option value="{{ wallet_name }}">{{ wallet_name }}</option>
+                {% endfor %}
+            </select>
             <br>
-            {{ img | safe }}
-            <br>
-        </div>
+            <button type="button" id="generateQrBtn" class="btn btn-primary">Generate QR</button>
+        </form>
+        <br>
+        <div id="qrCodeContainer"></div>
+        <p id="status"></p>
     </div>
+</div>
+
+<script>
+    let socket;
+
+    document.getElementById("generateQrBtn").addEventListener("click", async () => {
+        const walletName = document.getElementById("walletSelect").value;
+    
+        if (!walletName) {
+            alert("Please select a wallet!");
+            return;
+        }
+        
+        socket = new WebSocket(`ws://${window.location.host}/ws/tonconnect/{{ user_id }}/`);
+    
+        socket.onopen = function () {
+            console.log("WebSocket connection established");
+            
+            socket.send(JSON.stringify({
+                action: "generate_qr",
+                wallet_name: walletName,
+            }));
+        };
+        
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    
+        socket.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+    
+            if (data.status === "success") {
+                document.getElementById("qrCodeContainer").innerHTML = `
+                    <img src="data:image/png;base64,${data.qr_code}" alt="Scan QR Code">
+                `;
+                document.getElementById("status").innerText = "Waiting for connection...";
+            } else if (data.status === "connected") {
+                document.getElementById("status").innerText = `Connected with wallet:\n${data.address}`;
+            } else if (data.status === "timeout") {
+                alert("Connection timeout.");
+                document.getElementById("status").innerText = "Connection timeout.";
+            } else if (data.status === "minted") {
+                document.getElementById("status").innerText = `NFT successfully minted to your account: ${data.address}`;
+                alert("NFT authentication method is now enabled for your account!");
+            } else if (data.status === "incorrect") {
+                alert("This account already holds an NFT associated with a different user. Please use the correct wallet.");
+                document.getElementById("status").innerText = "Incorrect NFT detected.";
+            } else if (data.status === 'authenticated') {
+            const authToken = data.auth_token;
+            fetch('/nft/complete-login/', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify({ 'auth_token': authToken }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    window.location.href = '/profile';
+                } else {
+                    console.error(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        } else if (data.status === "error") {
+                alert(data.message);
+            }
+        };
+    
+        socket.onerror = function (error) {
+            console.error("WebSocket error:", error);
+            document.getElementById("status").innerText = "An error occurred. Please try again.";
+        };
+    
+        socket.onclose = function () {
+            console.log("WebSocket connection closed");
+        };
+    });
+</script>
 {% endblock %}

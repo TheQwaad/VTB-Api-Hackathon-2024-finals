@@ -9,7 +9,7 @@ class StoryAuthService:
 
 
     def __init__(self):
-        self.__authenticator = StoryAuthenticator(config.yadir_key, config.yaapi_key)
+        self.__authenticator = StoryAuthenticator(config.yadir_key.get_secret_value(), config.yaapi_key.get_secret_value())
 
     def gen_story(self):
         self.__authenticator.generate_story()

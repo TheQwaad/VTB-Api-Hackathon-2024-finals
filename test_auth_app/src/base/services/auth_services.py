@@ -8,19 +8,21 @@ class StoryAuthService:
 
 
     def __init__(self):
-        self.__authenticator = StoryAuthenticator(os.getenv("YAGPT_DIRECTORY_ID"), os.getenv("YAGPT_API_TOKEN"))
+        self.__authenticator = StoryAuthenticator("b1ghcpo9t3li3g1oqu58", "AQVNwkwtqNESYDFiqid2ewd07YXDZa6FIikZEQX0")
 
-    async def gen_story(self):
-        await self.__authenticator.generate_story()
-        self.__story = await self.__authenticator.get_story()
-        self.__correct_options = await self.__authenticator.get_objects()
-        self.__incorrect_options = await self.__authenticator.get_fake_objects()
+    def gen_story(self):
+        self.__authenticator.generate_story()
+        self.__story = self.__authenticator.get_story()
+        self.__correct_options = self.__authenticator.get_objects()
+        self.__incorrect_options = self.__authenticator.get_fake_objects()
 
-    async def get_story(self) -> str:
+    def get_story(self) -> str:
+        if self.__story is None:
+            self.gen_story()
         return self.__story
 
-    async def get_correct_option(self) -> list[str]:
+    def get_correct_option(self) -> list[str]:
         return self.__correct_options
 
-    async def get_incorrect_option(self) -> list[str]:
+    def get_incorrect_option(self) -> list[str]:
         return self.__incorrect_options

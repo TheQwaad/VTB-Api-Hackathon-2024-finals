@@ -58,8 +58,9 @@ class LoginConfirmView(APIView):
     def get(self, request: Request, user_id: int):
         user: StoryAuthUser = StoryAuthUser.objects.get_or_fail(id=user_id)
         story = user.story_set.get()
+        options = story.get_correct_options()[:1] + story.get_incorrect_options()
         return render(request, "story_auth/login_confirm.html", {
-            'options': story.get_correct_options() + story.get_incorrect_options(),
+            'options': options,
             'user_id': user.id
         })
 

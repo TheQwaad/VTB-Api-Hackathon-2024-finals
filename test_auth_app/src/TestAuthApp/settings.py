@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-j8vxqhwcdo@-g3r64=^fhe+@)l^7ohqraezog#kdu4t94nuptz
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['0.0.0.0']
 
 
 # Application definition
@@ -43,7 +43,14 @@ INSTALLED_APPS = [
     # custom
     'rest_framework',
     'base',
+    'channels',
 ]
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -74,7 +81,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'TestAuthApp.wsgi.application'
-
+# ASGI_APPLICATION = 'TestAuthApp.asgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases

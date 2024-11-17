@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import login, logout
 from django.shortcuts import render, redirect
 from base.models import StoryAuthUser
 from base.serializers.model_serializers import StoryAuthUserSerializer, VerifyMobileAppUserSerializer, LoginUserSerializer, MobileSerializer
@@ -47,6 +47,7 @@ class LoginView(APIView):
         serializer = LoginUserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = StoryAuthUser.authenticate(serializer.validated_data['username'], serializer.validated_data['password'])
+
         if not user.is_mobile_verified():
             return redirect("auth.verify_app", user_id=user.id)
         user.regenerate_story()

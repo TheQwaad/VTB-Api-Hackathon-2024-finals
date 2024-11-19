@@ -27,8 +27,7 @@ import java.security.MessageDigest
 
 class RegisterActivity : ComponentActivity() {
     private var onQrCodeScanned: ((String) -> Unit)? = null
-    private var debug: String = ""
-    private var url = "your url here"
+    private var url = "http://5.42.84.144"
 
     private val scanQrCodeLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK) {
@@ -90,14 +89,14 @@ class RegisterActivity : ComponentActivity() {
 
                         scannedQrCode?.let {
                             Text(
-                                text = "Содержимое QR-кода: $it",
+                                text = "QR-код успешно отсканирован!",
                                 modifier = Modifier.padding(top = 16.dp)
                             )
                         }
 
                         serverResponse?.let {
                             Text(
-                                text = "Ответ сервера: $it $debug",
+                                text = "$it",
                                 modifier = Modifier.padding(top = 16.dp)
                             )
                         }
@@ -141,21 +140,22 @@ class RegisterActivity : ComponentActivity() {
                     val response = BufferedReader(InputStreamReader(connection.inputStream)).use { reader ->
                         reader.readText()
                     }
-                    debug = response
                     val jsonResponse = JSONObject(response)
                     val jwtToken = jsonResponse.optString("jwt", null)
                         ?: throw IllegalArgumentException("JWT not found in response")
 
                     saveJwtToken(jwtToken)
-                    "JWT успешно получен и сохранён: $jwtToken"
+                    "Аккаунт успешно привязан"
+                    //"JWT успешно получен и сохранён: $jwtToken"
                 } else {
                     val errorResponse = BufferedReader(InputStreamReader(connection.errorStream)).use { reader ->
                         reader.readText()
                     }
-                    "Ошибка сервера: $responseCode. Ответ: $errorResponse"
+                    "Ошибка сервера: $responseCode"
                 }
             } catch (e: Exception) {
-                "Ошибка: ${e.message}"
+                //"Произошла непредвиденная ошибка: ${e.message}"
+                "Произошла непредвиденная ошибка"
             }
         }
     }

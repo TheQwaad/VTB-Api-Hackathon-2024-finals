@@ -1,11 +1,14 @@
 package com.example.auth_app
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,7 +28,7 @@ import java.net.URL
 import java.security.MessageDigest
 
 class LoginActivity : ComponentActivity() {
-    private var url = "your URL here"
+    private var url = "http://5.42.84.144"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -55,10 +58,19 @@ class LoginActivity : ComponentActivity() {
                             CircularProgressIndicator()
                         } else {
                             serverResponse?.let {
-                                Text(
-                                    text = it,
-                                    modifier = Modifier.padding(16.dp)
-                                )
+                                Box(
+                                    modifier = Modifier.weight(1f).fillMaxSize().padding(16.dp)
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(8.dp)
+                                        )
+                                    {
+                                        Text(
+                                            text = it,
+                                            modifier = Modifier.padding(16.dp)
+                                        )
+                                    }
+                                }
                             } ?: run {
                                 Text("Не удалось загрузить данные.")
                             }
@@ -74,7 +86,7 @@ class LoginActivity : ComponentActivity() {
             try {
                 val sharedPreferences = getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
                 val jwtToken = sharedPreferences.getString("jwt_token", null)
-                    ?: return@withContext "Ошибка: JWT не найден."
+                    ?: return@withContext "Устройство не авторизовано."
 
                 val imeiHash = generateSHA256Hash(getIMEI())
                 val requestBody = JSONObject().apply {
@@ -108,12 +120,12 @@ class LoginActivity : ComponentActivity() {
                         saveJwtToken(newJwtToken)
                     }
 
-                    response
+                    getStoryFromResponse(response)
                 } else {
                     val errorResponse = BufferedReader(InputStreamReader(connection.errorStream)).use { reader ->
                         reader.readText()
                     }
-                    "Ошибка сервера: $responseCode $errorResponse"
+                    "Ошибка сервера: $responseCode"
                 }
             } catch (e: Exception) {
                 "Ошибка: ${e.message}"
@@ -122,6 +134,7 @@ class LoginActivity : ComponentActivity() {
     }
 
 
+    @SuppressLint("HardwareIds")
     private fun getIMEI(): String {
         return Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
     }
@@ -140,5 +153,14 @@ class LoginActivity : ComponentActivity() {
         val digest = MessageDigest.getInstance("SHA-256")
         val hashBytes = digest.digest(input.toByteArray())
         return hashBytes.joinToString("") { "%02x".format(it) }
+    }
+
+    private fun getStoryFromResponse(response: String): String {
+        val jsonResponse = JSONObject(response)
+        val result = jsonResponse.optString("story", null)
+        if (!result.isNullOrEmpty()) {
+            return result.replace("**", "")
+        }
+        return "Не удалось извлечь историю"
     }
 }

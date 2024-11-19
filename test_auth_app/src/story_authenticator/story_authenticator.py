@@ -48,8 +48,7 @@ class StoryAuthenticator:
         return fake_objects
 
     def get_objects(self):
-        if self._objects is None:
-            self._update_objects()
+        self._update_objects()
         return self._objects
 
     def get_auth_objects(self):

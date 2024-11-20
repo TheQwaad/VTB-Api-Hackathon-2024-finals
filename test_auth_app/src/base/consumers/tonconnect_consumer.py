@@ -84,7 +84,7 @@ class TonConnectConsumer(AsyncWebsocketConsumer):
             nft_user_id = await get_nft_data(connector.account.address)
             user: BaseUser = await sync_to_async(BaseUser.objects.get)(id=user_id)
 
-            if user.nftauthmethod.is_ton_connected:
+            if (await sync_to_async(user.get_nft_auth_method)()).is_ton_connected:
                 if nft_user_id == user_id:
                     token = secrets.token_urlsafe(32)
                     await database_sync_to_async(WebSocketAuthToken.objects.create)(
@@ -109,8 +109,9 @@ class TonConnectConsumer(AsyncWebsocketConsumer):
                     }))
                 else:
                     address = await mint_nft(user_id, connector.account.address)
-                    user.nftauthmethod.is_ton_connected = True
-                    await sync_to_async(user.nftauthmethod.save)()
+                    auth_method = await sync_to_async(user.get_nft_auth_method)()
+                    auth_method.is_ton_connected = True
+                    await sync_to_async(auth_method.save)()
                     await sync_to_async(user.save)()
                     await self.send(json.dumps({
                         'status': 'minted',

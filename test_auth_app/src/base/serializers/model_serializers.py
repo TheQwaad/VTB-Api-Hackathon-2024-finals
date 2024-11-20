@@ -9,8 +9,9 @@ class RegisterUserSerializer(serializers.Serializer):
     story_auth = serializers.CharField(allow_null=True)
     nft_auth = serializers.CharField(allow_null=True)
 
-    def validate(self, attrs):
-        raise ValueError(attrs)
+    def validate(self, attrs: dict):
+        if attrs.get('story_auth') is None and attrs.get('nft_auth') is None:
+            raise serializers.ValidationError('You must chose except one auth method')
 
     def create(self, validated_data):
         validated_data['password'] = StoryAuthUser.make_password(validated_data['password'])

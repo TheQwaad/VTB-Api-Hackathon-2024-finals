@@ -54,6 +54,7 @@ class LoginView(View):
 
     async def post(self, request: Request):
         user_id = await sync_to_async(request.POST.get)('user_id')
+        raise ValueError(user_id)
         if user_id is None:
             serializer = LoginUserSerializer(data=request.POST)
             user = await sync_to_async(serializer.get_authenticated_user)()

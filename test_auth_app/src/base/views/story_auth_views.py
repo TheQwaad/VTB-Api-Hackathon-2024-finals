@@ -7,6 +7,7 @@ from base.models import *
 from base.serializers.model_serializers import VerifyMobileAppUserSerializer, MobileSerializer
 from rest_framework.serializers import ValidationError
 from base.services.qr_service import QrService
+from django.views import View
 
 
 class VerifyAppView(APIView):
@@ -37,7 +38,7 @@ class IsAppVerifiedView(APIView):
         })
 
 
-class LoginConfirmView(APIView):
+class LoginConfirmView(View):
     def get(self, request: Request, user_id: int):
         user: BaseUser = BaseUser.objects.get_or_fail(id=user_id)
         if not user.is_story_auth_enabled:
@@ -49,18 +50,20 @@ class LoginConfirmView(APIView):
             'user_id': user.id
         })
 
-    def post(self, request: Request, user_id: int):
-        chosen_option = request.POST.get('chosen_option')
+    async def post(self, request: Request, user_id: int):
+        from asgiref.sync import sync_to_async
+
+        chosen_option = await sync_to_async(request.POST.get)('chosen_option')
         if chosen_option is None:
             raise ValidationError('You must choose story option')
 
-        user: BaseUser = BaseUser.objects.get_or_fail(id=user_id)
+        user: BaseUser = await sync_to_async(BaseUser.objects.get_or_fail)(id=user_id)
         if not user.is_story_auth_enabled:
             raise ValidationError('Cannot check story for user with no story')
-        story = user.story_set.get()
-        if story is None or story.is_expired():
+        story = await sync_to_async(user.story_set.get)()
+        if story is None or await sync_to_async(story.is_expired)():
             raise ValidationError('Your story verification time expired')
-        if chosen_option not in story.get_correct_options():
+        if chosen_option not in await sync_to_async(story.get_correct_options)():
             raise ValidationError('You chose incorrect option')
 
         if user.is_nft_auth_enabled:
@@ -69,8 +72,8 @@ class LoginConfirmView(APIView):
             req.POST = {'user_id': user_id}
             return LoginView().post(Request(req))
 
-        login(request, user)
-        return redirect('profile')
+        await sync_to_async(login)(request, user)
+        return await sync_to_async(redirect)('profile')
 
 
 class GetStoryView(APIView):

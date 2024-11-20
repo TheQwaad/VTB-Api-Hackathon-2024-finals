@@ -95,6 +95,7 @@ DATABASES = {
     }
 }
 
+SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 # Static
 STATIC_ROOT = BASE_DIR / 'static/'
 STATIC_URL = '/static/'

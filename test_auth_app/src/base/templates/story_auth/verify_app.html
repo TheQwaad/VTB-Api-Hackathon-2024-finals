@@ -7,25 +7,24 @@
             <br>
             {{ img | safe }}
             <br>
-
-            <script>
-                document.onload = () => {
-                    const checkIsVerified = () => {
-                        $.ajax({
-                            url: '{% url 'story.is_verified' user_id %}',
-                            method: 'GET',
-                            success: (data) => {
-                                console.log(data);
-                                if (data['verified']) {
-                                    location.href = data['redirect'];
-                                }
-                            }
-                        });
-                        setTimeout(checkIsVerified, 1000);
-                    }
-                    checkIsVerified();
-                }
-            </script>
         </div>
     </div>
+    <script>
+        $(document).ready(function () {
+            const checkIsVerified = () => {
+                $.ajax({
+                    url: '{% url 'story.is_verified' user_id %}',
+                    method: 'GET',
+                    success: (data) => {
+                        console.log(data);
+                        if (data['verified']) {
+                            location.href = data['redirect'];
+                        }
+                    }
+                });
+                setTimeout(checkIsVerified, 1000);
+            }
+            checkIsVerified();
+        }
+    </script>
 {% endblock %}

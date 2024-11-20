@@ -50,7 +50,7 @@ class RegisterView(APIView):
 
 class LoginView(View):
     async def get(self, request: Request):
-        return render(request, "nft_auth/login.html")
+        return render(request, "login.html")
 
     async def post(self, request: Request):
         serializer = LoginUserSerializer(data=request.data)
@@ -58,7 +58,7 @@ class LoginView(View):
         if not user.is_register_complete():
             return await sync_to_async(user.get_register_redirect)()
 
-        if user.is_story_auth_enabled():
+        if user.is_story_auth_enabled:
             user.get_story_auth_method().regenerate_story()
             return await sync_to_async(redirect)('auth.login_confirm', user_id=user.id)
 

@@ -67,7 +67,7 @@ class LoginConfirmView(View):
         if chosen_option not in await sync_to_async(story.get_correct_options)():
             raise ValidationError('You chose incorrect option')
 
-        if user.is_nft_auth_enabled:
+        if await sync_to_async(user.get_nft_auth_method)() is not None:
             from base.views.views import LoginView
             req = HttpRequest()
             req.POST = {'user_id': user_id}

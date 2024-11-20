@@ -84,7 +84,7 @@ class TonConnectConsumer(AsyncWebsocketConsumer):
             nft_user_id = await get_nft_data(connector.account.address)
             user: BaseUser = await sync_to_async(BaseUser.objects.get)(id=user_id)
 
-            if user.is_ton_connected:
+            if user.nftauthmethod.is_ton_connected:
                 if nft_user_id == user_id:
                     token = secrets.token_urlsafe(32)
                     await database_sync_to_async(WebSocketAuthToken.objects.create)(

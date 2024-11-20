@@ -71,7 +71,7 @@ class LoginConfirmView(View):
             from base.views.views import LoginView
             req = HttpRequest()
             req.POST = {'user_id': user_id}
-            return LoginView().post(Request(req))
+            return await LoginView().post(Request(req))
 
         await sync_to_async(login)(request, user)
         return await sync_to_async(redirect)('profile')

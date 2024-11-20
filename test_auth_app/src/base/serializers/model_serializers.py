@@ -15,7 +15,6 @@ class RegisterUserSerializer(serializers.Serializer):
         return super().validate(attrs)
 
     def create(self, validated_data: dict):
-        raise ValueError(validated_data)
         validated_data['password'] = BaseUser.make_password(validated_data['password'])
         is_story_auth = validated_data.get('story_auth')
         is_nft_auth = validated_data.get('nft_auth')
@@ -31,6 +30,7 @@ class RegisterUserSerializer(serializers.Serializer):
         if is_nft_auth:
             NftAuthUser.objects.create(baseuser_ptr_id=user.id)
 
+        raise ValueError(user.__dict__)
         return user
 
 

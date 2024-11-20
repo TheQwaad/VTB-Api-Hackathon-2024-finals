@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 from pathlib import Path
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
 
@@ -28,7 +29,7 @@ SECRET_KEY = 'django-insecure-j8vxqhwcdo@-g3r64=^fhe+@)l^7ohqraezog#kdu4t94nuptz
 DEBUG = True
 
 
-ALLOWED_HOSTS = ['0.0.0.0']
+ALLOWED_HOSTS = ['0.0.0.0', '5.42.84.144']
 
 
 # Application definition
@@ -94,7 +95,12 @@ DATABASES = {
     }
 }
 
-
+# Static
+STATIC_ROOT = BASE_DIR / 'static/'
+STATIC_URL = '/static/'
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, 'static'),
+)
 # Auth staff
 
 AUTH_USER_MODEL = 'base.BaseUser'

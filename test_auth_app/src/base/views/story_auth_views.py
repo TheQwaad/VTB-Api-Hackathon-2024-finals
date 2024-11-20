@@ -12,7 +12,7 @@ from base.services.qr_service import QrService
 class VerifyAppView(APIView):
     def get(self, request: Request, user_id: int):
         user: BaseUser = BaseUser.objects.get_or_fail(id=user_id)
-        if not user.is_story_auth_enabled():
+        if not user.is_story_auth_enabled:
             raise ValidationError('Cannot verify app for user with no story auth enabled')
         img_html = QrService.generate_mobile_verify_qr(user)
         return render(request, 'story_auth/verify_app.html', {'img': img_html})

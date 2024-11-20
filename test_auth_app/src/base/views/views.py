@@ -38,7 +38,6 @@ class RegisterView(APIView):
         return render(request, 'register.html')
 
     def post(self, request: Request):
-        return Response(data=request.data)
         user_serializer = StoryAuthUserSerializer(data=request.data)
         user_serializer.is_valid(raise_exception=True)
         user: StoryAuthUser = user_serializer.save()

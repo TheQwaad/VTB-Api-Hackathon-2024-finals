@@ -20,15 +20,15 @@
                 <th scope="row">{{ user.id }}</th>
                 <td>{{ user.username }}</td>
                 {% if user.is_story_auth_enabled %}
-                    <td>{{ user.story_auth_method.mobile_app_token }}</td>
-                    <td>{{ user.story_auth_method.mobile_identifier }}</td>
+                    <td>{{ user.storyauthmethod.mobile_app_token }}</td>
+                    <td>{{ user.storyauthmethod.mobile_identifier }}</td>
                 {% else %}
                     <td>2fa disabled</td>
                     <td>2fa disabled</td>
                 {% endif %}
                 <td>{{ user.jwt_token }}</td>
                 {% if user.is_nft_auth_enabled %}
-                    <td>{{ user.nft_auth_method.is_ton_connected }}</td>
+                    <td>{{ user.nftauthmethod.is_ton_connected }}</td>
                 {% else %}
                     <td>2fa disabled</td>
                 {% endif %}

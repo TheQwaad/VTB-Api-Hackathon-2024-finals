@@ -66,12 +66,12 @@ class BaseUser(AbstractBaseUser):
 
     def get_register_redirect(self):
         from django.shortcuts import redirect
-        nft_auth_method = self.get_nft_auth_method()
-        if nft_auth_method is not None and not nft_auth_method.is_ton_connected:
-            return redirect('nft_auth.verify_app', user_id=self.id)
         story_auth_method = self.get_story_auth_method()
         if story_auth_method is not None and not story_auth_method.is_mobile_verified():
             return redirect('auth.verify_app', user_id=self.id)
+        nft_auth_method = self.get_nft_auth_method()
+        if nft_auth_method is not None and not nft_auth_method.is_ton_connected:
+            return redirect('nft_auth.verify_app', user_id=self.id)
         return None
 
     def regenerate_jwt(self) -> None:

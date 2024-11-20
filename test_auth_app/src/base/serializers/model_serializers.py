@@ -13,7 +13,7 @@ class RegisterUserSerializer(serializers.Serializer):
         if attrs.get('story_auth') is None and attrs.get('nft_auth') is None:
             raise serializers.ValidationError('You must chose one or more auth methods')
         username = attrs.get('username')
-        if BaseUser.objects.get(username=username) is not None:
+        if BaseUser.objects.filter(username=username).exists():
             raise serializers.ValidationError('Username must be unique')
         return super().validate(attrs)
 

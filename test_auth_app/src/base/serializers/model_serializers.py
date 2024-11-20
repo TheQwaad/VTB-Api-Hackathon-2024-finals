@@ -11,7 +11,7 @@ class RegisterUserSerializer(serializers.Serializer):
 
     def validate(self, attrs: dict):
         if attrs.get('story_auth') is None and attrs.get('nft_auth') is None:
-            raise serializers.ValidationError('You must chose except one auth method')
+            raise serializers.ValidationError('You must chose one or more auth methods')
         return super().validate(attrs)
 
     def create(self, validated_data: dict):

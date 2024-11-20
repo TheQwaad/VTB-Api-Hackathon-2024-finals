@@ -16,10 +16,9 @@ class RegisterUserSerializer(serializers.Serializer):
 
     def create(self, validated_data: dict):
         validated_data['password'] = BaseUser.make_password(validated_data['password'])
-        is_story_auth = validated_data.get('story_auth')
-        is_nft_auth = validated_data.get('nft_auth')
-        validated_data.pop('story_auth')
-        validated_data.pop('nft_auth')
+        is_story_auth, is_nft_auth = validated_data.get('story_auth'), validated_data.get('nft_auth')
+        if is_story_auth: validated_data.pop('story_auth')
+        if is_nft_auth: validated_data.pop('nft_auth')
         user: BaseUser = BaseUser.objects.create(**validated_data)
         user.regenerate_jwt()
 

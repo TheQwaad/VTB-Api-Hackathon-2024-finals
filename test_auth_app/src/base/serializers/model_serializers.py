@@ -6,8 +6,8 @@ from django.contrib.auth.hashers import make_password
 class RegisterUserSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150, allow_null=False, required=True)
     password = serializers.CharField(max_length=50, min_length=4, allow_null=False, required=True)
-    story_auth = serializers.CharField(allow_null=True)
-    nft_auth = serializers.CharField(allow_null=True)
+    story_auth = serializers.CharField(allow_null=True, required=False)
+    nft_auth = serializers.CharField(allow_null=True, required=False)
 
     def validate(self, attrs: dict):
         if attrs.get('story_auth') is None and attrs.get('nft_auth') is None:

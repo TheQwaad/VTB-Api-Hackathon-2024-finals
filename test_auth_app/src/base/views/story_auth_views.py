@@ -39,13 +39,14 @@ class IsAppVerifiedView(APIView):
 
 
 class LoginConfirmView(View):
-    def get(self, request: Request, user_id: int):
-        user: BaseUser = BaseUser.objects.get_or_fail(id=user_id)
+    async def get(self, request: Request, user_id: int):
+        from asgiref.sync import sync_to_async
+        user: BaseUser = await sync_to_async(BaseUser.objects.get_or_fail)(id=user_id)
         if not user.is_story_auth_enabled:
             raise ValidationError('Cannot check story for user with no story')
-        story = user.story_set.get()
-        options = story.get_correct_options()[:1] + story.get_incorrect_options()
-        return render(request, "story_auth/login_confirm.html", {
+        story = await sync_to_async(user.story_set.get)()
+        options = await sync_to_async(story.get_correct_options)()[:1] + await sync_to_async(story.get_incorrect_options)()
+        return await sync_to_async(render)(request, "story_auth/login_confirm.html", {
             'options': options,
             'user_id': user.id
         })

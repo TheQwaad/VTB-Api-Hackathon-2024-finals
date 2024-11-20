@@ -45,7 +45,7 @@ class LoginConfirmView(View):
         if await sync_to_async(user.get_story_auth_method)() is None:
             raise ValidationError('Cannot check story for user with no story')
         story = await sync_to_async(user.story_set.get)()
-        options = await sync_to_async(story.get_correct_options)()[:1] + await sync_to_async(story.get_incorrect_options)()
+        options = (await sync_to_async(story.get_correct_options)())[:1] + await sync_to_async(story.get_incorrect_options)()
         return await sync_to_async(render)(request, "story_auth/login_confirm.html", {
             'options': options,
             'user_id': user.id

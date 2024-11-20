@@ -16,14 +16,18 @@ class RegisterUserSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         validated_data['password'] = StoryAuthUser.make_password(validated_data['password'])
+        is_story_auth = validated_data.get('story_auth')
+        is_nft_auth = validated_data.get('nft_auth')
+        validated_data.pop('story_auth')
+        validated_data.pop('nft_auth')
         user: BaseUser = BaseUser.objects.create(**validated_data)
         user.regenerate_jwt()
 
-        if validated_data.get('story_auth') is not None:
+        if is_story_auth:
             story_auth_user: StoryAuthUser = StoryAuthUser.objects.create(baseuser_ptr_id=user.id)
             story_auth_user.regenerate_app_token()
 
-        if validated_data.get('nft_auth') is not None:
+        if is_nft_auth:
             NftAuthUser.objects.create(baseuser_ptr_id=user.id)
 
         return user

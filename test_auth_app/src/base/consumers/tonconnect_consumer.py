@@ -16,7 +16,6 @@ from pytoniq_core import Address
 from base.services.tonconnect_handlers.tonconnect_helper import TonConnectWrapper
 from base.services.nft_staff.get_nft_data import get_nft_data
 from base.services.nft_staff.nft_mint_helper import mint_nft
-from base.models import *
 
 
 class TonConnectConsumer(AsyncWebsocketConsumer):
@@ -81,6 +80,7 @@ class TonConnectConsumer(AsyncWebsocketConsumer):
                 'status': 'connected',
                 'address': Address(connector.account.address).to_str(),
             }))
+            from base.models import BaseUser, WebSocketAuthToken
             nft_user_id = await get_nft_data(connector.account.address)
             user: BaseUser = await sync_to_async(BaseUser.objects.get)(id=user_id)
 

@@ -55,10 +55,30 @@ class BaseUser(AbstractBaseUser):
     def check_password(self, password: str) -> bool:
         return check_password(password, self.password)
 
+    def is_register_complete(self) -> bool:
+        nft_auth_method = self.get_nft_auth_method()
+        if nft_auth_method is not None and not nft_auth_method.is_ton_connected:
+            return False
+        story_auth_method = self.get_story_auth_method()
+        if story_auth_method is not None and not story_auth_method.is_mobile_verified():
+            return False
+        return True
+
+    def get_register_redirect(self):
+        from django.shortcuts import redirect
+        nft_auth_method = self.get_nft_auth_method()
+        if nft_auth_method is not None and not nft_auth_method.is_ton_connected:
+            return redirect('nft_auth.verify_app', user_id=self.id)
+        story_auth_method = self.get_story_auth_method()
+        if story_auth_method is not None and not story_auth_method.is_mobile_verified():
+            return redirect('auth.verify_app', user_id=self.id)
+        return None
+
     def regenerate_jwt(self) -> None:
         self.jwt_token = get_random_string(length=32)
         self.save()
 
+    @property
     def is_story_auth_enabled(self) -> bool:
         return self.get_story_auth_method() is not None
 
@@ -68,6 +88,7 @@ class BaseUser(AbstractBaseUser):
         except ObjectDoesNotExist:
             return None
 
+    @property
     def is_nft_auth_enabled(self) -> bool:
         return self.get_nft_auth_method() is not None
 

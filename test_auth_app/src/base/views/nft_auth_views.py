@@ -30,27 +30,6 @@ class VerifyRegisterView(View):
             return await sync_to_async(HttpResponseServerError)(f"Error: {str(e)}")
 
 
-class LoginView(View):
-    async def get(self, request: Request):
-        return render(request, "nft_auth/login.html")
-
-    async def post(self, request: Request):
-        serializer = LoginUserSerializer(data=request.POST)
-        serializer.is_valid(raise_exception=True)
-        user = await sync_to_async(NftAuthUser.authenticate)(serializer.validated_data['username'], serializer.validated_data['password'])
-        try:
-            connector = TonConnectWrapper(user_id=user.id)
-            wallets = await connector.get_wallet_list()
-            wallet_names = [wallet["name"] for wallet in wallets]
-            response = await sync_to_async(render)(request, "nft_auth/verify_app.html",
-                                                   {"wallet_names": wallet_names, "user_id": user.id})
-            return response
-        except NftAuthUser.DoesNotExist:
-            return await sync_to_async(HttpResponseServerError)("User not found")
-        except Exception as e:
-            return await sync_to_async(HttpResponseServerError)(f"Error: {str(e)}")
-
-
 def complete_login(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -69,12 +48,3 @@ def complete_login(request):
             return JsonResponse({'status': 'error', 'message': 'Invalid auth token'}, status=400)
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
-
-
-class LogoutView(APIView):
-    authentication_classes = [SessionAuthentication, BasicAuthentication]
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request: Request):
-        logout(request)
-        return redirect("index")

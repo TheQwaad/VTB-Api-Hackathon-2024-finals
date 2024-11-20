@@ -1,7 +1,7 @@
 {% extends 'template.html' %}
 
 {% block content %}
-    <h2>Story Users</h2>
+    <h2>Users</h2>
     <p>(Just for easier tests)</p>
     <table class="table table-striped">
         <thead>
@@ -11,36 +11,27 @@
             <th scope="col">App token</th>
             <th scope="col">Mobile id</th>
             <th scope="col">JWT</th>
+            <th scope="col">Is TON enabled</th>
         </tr>
         </thead>
         <tbody>
-        {% for user in story_users %}
+        {% for user in users %}
             <tr>
                 <th scope="row">{{ user.id }}</th>
                 <td>{{ user.username }}</td>
-                <td>{{ user.mobile_app_token }}</td>
-                <td>{{ user.mobile_identifier }}</td>
+                {% if user.is_story_auth_enabled %}
+                    <td>{{ user.story_auth_method.mobile_app_token }}</td>
+                    <td>{{ user.story_auth_method.mobile_identifier }}</td>
+                {% else %}
+                    <td>Not set</td>
+                    <td>Not set</td>
+                {% endif %}
                 <td>{{ user.jwt_token }}</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-    <h2>Nft Users</h2>
-    <p>(Just for easier tests)</p>
-    <table class="table table-striped">
-        <thead>
-        <tr>
-            <th scope="col">#</th>
-            <th scope="col">Username</th>
-            <th scope="col">Is ton connected</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for user in nft_users %}
-            <tr>
-                <th scope="row">{{ user.id }}</th>
-                <td>{{ user.username }}</td>
-                <td>{{ user.is_ton_connected }}</td>
+                {% if user.is_nft_auth_enabled %}
+                    <td>{{ user.nft_auth_method.is_ton_connected }}</td>
+                {% else %}
+                    <td>Not set</td>
+                {% endif %}
             </tr>
         {% endfor %}
         </tbody>

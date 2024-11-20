@@ -30,7 +30,6 @@ class RegisterUserSerializer(serializers.Serializer):
         if is_nft_auth:
             NftAuthMethod.objects.create(user=user)
 
-        raise ValueError(user.__dict__)
         return user
 
 
@@ -62,18 +61,20 @@ class VerifyMobileAppUserSerializer(serializers.Serializer):
     token = serializers.CharField(max_length=1500, required=True, allow_null=False)
     mobile_identifier = serializers.CharField(max_length=1500, required=True, allow_null=False)
 
-    def __init__(self, user: StoryAuthUser, **kwargs):
+    def __init__(self, user: BaseUser, **kwargs):
         super().__init__(**kwargs)
         self.__user = user
+        if not user.is_story_auth_enabled():
+            raise ValidationError('Cannot verify app for user with no story auth')
 
     def validate_token(self, token: str) -> str:
-        if token is None or self.__user.mobile_app_token != token:
+        if token is None or self.__user.get_story_auth_method().mobile_app_token != token:
             raise serializers.ValidationError('Incorrect token for user')
         return token
 
-    def verify_mobile_app(self) -> StoryAuthUser:
+    def verify_mobile_app(self) -> BaseUser:
         self.is_valid(raise_exception=True)
-        if self.__user.is_mobile_verified():
+        if self.__user.get_story_auth_method().is_mobile_verified():
             raise serializers.ValidationError('You cannot link more than one devices')
         self.__user.mobile_identifier = self.validated_data['mobile_identifier']
         self.__user.mobile_app_token = None
@@ -87,6 +88,10 @@ class VerifyMobileAppUserSerializer(serializers.Serializer):
 class LoginUserSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150, required=True, allow_null=False)
     password = serializers.CharField(min_length=4, max_length=150, required=True, allow_null=False)
+
+    def get_authenticated_user(self) -> BaseUser:
+        self.is_valid(raise_exception=True)
+        return BaseUser.authenticate(self.validated_data['username'], self.validated_data['password'])
 
 
 class MobileSerializer(serializers.Serializer):

@@ -11,17 +11,6 @@ from rest_framework.serializers import ValidationError
 from base.services.qr_service import QrService
 
 
-class RegisterView(APIView):
-    def get(self, request: Request):
-        return render(request, 'story_auth/register.html')
-
-    def post(self, request: Request):
-        user_serializer = StoryAuthUserSerializer(data=request.data)
-        user_serializer.is_valid(raise_exception=True)
-        user: StoryAuthUser = user_serializer.save()
-        return redirect("auth.verify_app", user_id=user.id)
-
-
 class VerifyAppView(APIView):
     def get(self, request: Request, user_id: int):
         user: StoryAuthUser = StoryAuthUser.objects.get_or_fail(id=user_id)

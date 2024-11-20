@@ -3,6 +3,23 @@ from base.models import StoryAuthUser, BaseUser, NftAuthUser
 from django.contrib.auth.hashers import make_password
 
 
+class RegisterUserSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(max_length=150, allow_null=False, required=True)
+    password = serializers.CharField(max_length=50, min_length=4, allow_null=False, required=True)
+    story_auth = serializers.BooleanField(allow_null=True)
+    nft_auth = serializers.BooleanField(allow_null=True)
+
+    def validate(self, attrs):
+        raise ValueError(attrs)
+
+    def create(self, validated_data):
+        validated_data['password'] = StoryAuthUser.make_password(validated_data['password'])
+        user: StoryAuthUser = StoryAuthUser.objects.create(**validated_data)
+        user.regenerate_app_token()
+        user.regenerate_jwt()
+        return user
+
+
 class StoryAuthUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = StoryAuthUser

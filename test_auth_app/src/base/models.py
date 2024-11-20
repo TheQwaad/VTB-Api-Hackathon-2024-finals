@@ -58,6 +58,18 @@ class BaseUser(AbstractBaseUser):
         self.jwt_token = get_random_string(length=32)
         self.save()
 
+    def is_story_auth_enabled(self) -> bool:
+        return self.get_story_auth_user() is not None
+
+    def get_story_auth_user(self) -> StoryAuthUser | None:
+        return StoryAuthUser.objects.get(baseuser_ptr_id=self.id)
+
+    def is_nft_auth_enabled(self) -> bool:
+        return self.get_nft_auth_user() is not None
+
+    def get_nft_auth_user(self) -> StoryAuthUser | None:
+        return NftAuthUser.objects.get(baseuser_ptr_id=self.id)
+
 
 class StoryAuthUser(BaseUser):
     """

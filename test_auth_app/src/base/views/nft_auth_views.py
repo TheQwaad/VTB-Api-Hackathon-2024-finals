@@ -15,17 +15,6 @@ from base.serializers.model_serializers import LoginUserSerializer, NftAuthUserS
 from base.services.tonconnect_handlers.tonconnect_helper import TonConnectWrapper
 
 
-class RegisterView(APIView):
-    def get(self, request: Request):
-        return render(request, 'nft_auth/register.html')
-
-    def post(self, request: Request):
-        user_serializer = NftAuthUserSerializer(data=request.data)
-        user_serializer.is_valid(raise_exception=True)
-        user: NftAuthUser = user_serializer.save()
-        return redirect("nft_auth.verify_app", user_id=user.id)
-
-
 class VerifyRegisterView(View):
     async def get(self, request, user_id: int):
         try:

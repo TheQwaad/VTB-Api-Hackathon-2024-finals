@@ -1,4 +1,4 @@
-from rest_framework.request import Request
+from rest_framework.request import Request, HttpRequest
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import login
@@ -65,8 +65,9 @@ class LoginConfirmView(APIView):
 
         if user.is_nft_auth_enabled:
             from base.views.views import LoginView
-            request.POST['user_id'] = user_id
-            return LoginView().post(request)
+            req = HttpRequest()
+            req.POST = {'user_id': user_id}
+            return LoginView().post(Request(req))
 
         login(request, user)
         return redirect('profile')

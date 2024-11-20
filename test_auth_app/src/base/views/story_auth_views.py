@@ -42,7 +42,7 @@ class LoginConfirmView(APIView):
         user: BaseUser = BaseUser.objects.get_or_fail(id=user_id)
         if not user.is_story_auth_enabled:
             raise ValidationError('Cannot check story for user with no story')
-        story = user.get_story_auth_method().story_set.get()
+        story = user.story_set.get()
         options = story.get_correct_options()[:1] + story.get_incorrect_options()
         return render(request, "story_auth/login_confirm.html", {
             'options': options,

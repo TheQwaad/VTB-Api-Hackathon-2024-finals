@@ -52,12 +52,17 @@ class LoginConfirmView(APIView):
         if chosen_option is None:
             raise ValidationError('You must choose story option')
 
-        user: StoryAuthUser = StoryAuthUser.objects.get_or_fail(id=user_id)
-        story = user.story_set.get()
+        user: BaseUser = StoryAuthUser.objects.get_or_fail(id=user_id)
+        if not user.is_story_auth_enabled:
+            raise ValidationError('Cannot check story for user with no story')
+        story = user.get_story_auth_method().story_set.get()
         if story is None or story.is_expired():
             raise ValidationError('Your story verification time expired')
         if chosen_option not in story.get_correct_options():
             raise ValidationError('You chose incorrect option')
+
+        if user.is_nft_auth_enabled:
+            return redirect('auth.login')
 
         login(request, user)
         return redirect('profile')

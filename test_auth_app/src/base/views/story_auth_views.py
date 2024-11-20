@@ -30,9 +30,9 @@ class VerifyAppView(APIView):
 
 class IsAppVerifiedView(APIView):
     def get(self, request: Request, user_id: int):
-        user = BaseUser.objects.get_or_fail(id=user_id)
+        user: BaseUser = BaseUser.objects.get_or_fail(id=user_id)
         return Response(data={
-            'verified': user.is_register_complete(),
+            'verified': user.get_story_auth_method().is_mobile_verified(),
             'redirect': user.get_register_redirect_str()
         })
 

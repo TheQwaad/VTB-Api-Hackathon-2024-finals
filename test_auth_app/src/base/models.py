@@ -84,7 +84,7 @@ class BaseUser(AbstractBaseUser):
 
     def get_story_auth_method(self) -> StoryAuthMethod | None:
         try:
-            return self.story_auth_method
+            return self.storyauthmethod
         except ObjectDoesNotExist:
             return None
 
@@ -94,7 +94,7 @@ class BaseUser(AbstractBaseUser):
 
     def get_nft_auth_method(self) -> NftAuthMethod | None:
         try:
-            return self.nft_auth_method
+            return self.nftauthmethod
         except ObjectDoesNotExist:
             return None
 

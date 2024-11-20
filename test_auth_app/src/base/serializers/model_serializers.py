@@ -14,8 +14,9 @@ class RegisterUserSerializer(serializers.Serializer):
             raise serializers.ValidationError('You must chose except one auth method')
         return super().validate(attrs)
 
-    def create(self, validated_data):
-        validated_data['password'] = StoryAuthUser.make_password(validated_data['password'])
+    def create(self, validated_data: dict):
+        raise ValueError(validated_data)
+        validated_data['password'] = BaseUser.make_password(validated_data['password'])
         is_story_auth = validated_data.get('story_auth')
         is_nft_auth = validated_data.get('nft_auth')
         validated_data.pop('story_auth')

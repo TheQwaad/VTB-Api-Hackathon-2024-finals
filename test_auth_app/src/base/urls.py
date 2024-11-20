@@ -1,6 +1,8 @@
 from django.urls import path
 
 from base.views import views, story_auth_views, nft_auth_views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path("", views.IndexView.as_view(), name="index"),
@@ -20,4 +22,4 @@ urlpatterns = [
     path("nft/login", nft_auth_views.LoginView.as_view(), name="nft_auth.login"),
     path("nft/logout", nft_auth_views.LogoutView.as_view(), name="nft_auth.logout"),
     path('nft/complete-login/', nft_auth_views.complete_login, name='complete_login'),
-]
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

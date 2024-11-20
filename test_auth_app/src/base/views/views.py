@@ -3,7 +3,7 @@ from base.serializers.model_serializers import *
 from asgiref.sync import sync_to_async
 from django.http import HttpResponseServerError
 from django.views import View
-from django.contrib.auth import logout
+from django.contrib.auth import logout, login
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -61,11 +61,14 @@ class LoginView(View):
         else:
             user = await sync_to_async(BaseUser.objects.get_or_fail)(id=user_id)
 
-        if await sync_to_async(user.get_story_auth_method)() is not None:
+        if user_id is None and await sync_to_async(user.get_story_auth_method)() is not None:
             auth_method = await sync_to_async(user.get_story_auth_method)()
             await sync_to_async(auth_method.regenerate_story)()
             return await sync_to_async(redirect)('auth.login_confirm', user_id=user.id)
 
+        if await sync_to_async(user.get_nft_auth_method)() is None:
+            await sync_to_async(login)(request, user)
+            return await sync_to_async(redirect)('profile')
         serializer = LoginUserSerializer(data=request.POST)
         await sync_to_async(serializer.is_valid)(raise_exception=True)
         try:

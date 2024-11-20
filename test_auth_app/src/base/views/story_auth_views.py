@@ -62,10 +62,10 @@ class LoginConfirmView(View):
         if await sync_to_async(user.get_story_auth_method)() is None:
             raise ValidationError('Cannot check story for user with no story')
         story = await sync_to_async(user.story_set.get)()
-        if False and (story is None or await sync_to_async(story.is_expired)()):
-            raise ValidationError('Your story verification time expired')
-        if chosen_option not in await sync_to_async(story.get_correct_options)():
-            raise ValidationError('You chose incorrect option')
+        # if story is None or await sync_to_async(story.is_expired)():
+        #     raise ValidationError('Your story verification time expired')
+        # if chosen_option not in await sync_to_async(story.get_correct_options)():
+        #     raise ValidationError('You chose incorrect option')
 
         if await sync_to_async(user.get_nft_auth_method)() is not None:
             from base.views.views import LoginView

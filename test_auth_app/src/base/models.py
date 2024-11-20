@@ -89,7 +89,7 @@ def expriration_time():
 
 
 class Story(models.Model):
-    EXPIRATION_TIME = 2
+    EXPIRATION_TIME = 5
     __OPTION_DELIMITER = '#####'
 
     user = models.ForeignKey(StoryAuthUser, on_delete=models.CASCADE)
@@ -137,11 +137,14 @@ class NftAuthUser(BaseUser):
 
 User = get_user_model()
 
+
 class WebSocketAuthToken(models.Model):
-    token = models.CharField(max_length=64, unique=True)
+    token = models.CharField(max_length=64, unique=True, null=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    expires_at = models.DateTimeField()
-    used = models.BooleanField(default=False)
+    expires_at = models.DateTimeField(null=False, default=expriration_time)
+    used = models.BooleanField(default=False, null=False)
+
+    objects = models.Manager()
 
     def is_valid(self):
         return not self.used and self.expires_at >= timezone.now()

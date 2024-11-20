@@ -30,89 +30,92 @@ class TonConnectConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         data = json.loads(text_data)
 
-        if data['action'] == 'generate_qr':
-            wallet_name = data.get('wallet_name')
-            user_id = self.user_id
-            if not wallet_name:
-                await self.send(json.dumps({'status': 'error', 'message': 'Wallet name is required'}))
-                return
+        if data['action'] != 'generate_qr':
+            return
 
-            proof_payload = TonConnectWrapper.generate_payload(600)
-            connector = TonConnectWrapper.get_connector(user_id)
+        wallet_name = data.get('wallet_name')
+        user_id = self.user_id
+        if not wallet_name:
+            await self.send(json.dumps({'status': 'error', 'message': 'Wallet name is required'}))
+            return
 
-            def status_changed(wallet_info):
-                if wallet_info is not None:
-                    if not TonConnectWrapper.check_payload(proof_payload, wallet_info):
-                        raise Exception('Invalid proof')
-                unsubscribe()
+        proof_payload = TonConnectWrapper.generate_payload(600)
+        connector = TonConnectWrapper.get_connector(user_id)
 
-            def status_error(e):
-                print('connect_error:', e)
+        def status_changed(wallet_info):
+            if wallet_info is not None and not TonConnectWrapper.check_payload(proof_payload, wallet_info):
+                raise Exception('Invalid proof')
+            unsubscribe()
 
-            unsubscribe = connector.on_status_change(status_changed, status_error)
-            wallet = next((w for w in connector.get_wallets() if w['name'] == wallet_name), None)
-            if wallet is None:
-                raise Exception(f'Unknown wallet: {wallet_name}')
+        def status_error(e):
+            print('connect_error:', e)
 
-            url = await connector.connect(wallet, {"ton_proof": proof_payload})
+        unsubscribe = connector.on_status_change(status_changed, status_error)
+        wallet = next((w for w in connector.get_wallets() if w['name'] == wallet_name), None)
+        if wallet is None:
+            raise Exception(f'Unknown wallet: {wallet_name}')
 
-            qr = segno.make(url)
-            buffer = io.BytesIO()
-            qr.save(buffer, kind='png', scale=5)
-            buffer.seek(0)
-            qr_base64 = base64.b64encode(buffer.getvalue()).decode()
+        url = await connector.connect(wallet, {"ton_proof": proof_payload})
+
+        qr = segno.make(url)
+        buffer = io.BytesIO()
+        qr.save(buffer, kind='png', scale=5)
+        buffer.seek(0)
+        qr_base64 = base64.b64encode(buffer.getvalue()).decode()
+
+        await self.send(json.dumps({
+            'status': 'success',
+            'qr_code': qr_base64,
+            'url': url,
+        }))
+
+        for _ in range(300):
+            await asyncio.sleep(1)
+            if not connector.connected:
+                continue
+            if not connector.account.address:
+                continue
 
             await self.send(json.dumps({
-                'status': 'success',
-                'qr_code': qr_base64,
-                'url': url,
+                'status': 'connected',
+                'address': Address(connector.account.address).to_str(),
             }))
+            from base.models import NftAuthUser, WebSocketAuthToken
 
-            for _ in range(300):
-                await asyncio.sleep(1)
-                if connector.connected:
-                    if connector.account.address:
-                        await self.send(json.dumps({
-                            'status': 'connected',
-                            'address': Address(connector.account.address).to_str(),
-                        }))
-                        from base.models import NftAuthUser, WebSocketAuthToken
+            nft_user_id = await get_nft_data(connector.account.address)
+            user: NftAuthUser = await sync_to_async(NftAuthUser.objects.get)(id=user_id)
 
-                        nft_user_id = await get_nft_data(connector.account.address)
-                        user: NftAuthUser = await sync_to_async(NftAuthUser.objects.get)(id=user_id)
+            if user.is_ton_connected:
+                if nft_user_id == user_id:
+                    token = secrets.token_urlsafe(32)
+                    await database_sync_to_async(WebSocketAuthToken.objects.create)(
+                        token=token,
+                        user=user
+                    )
+                    await self.send(json.dumps({
+                        'status': 'authenticated',
+                        'user_id': user.id,
+                        'auth_token': token,
+                    }))
+                else:
+                    await self.send(json.dumps({
+                        'status': 'incorrect',
+                        'message': 'This NFT is linked to another user.'
+                    }))
+            else:
+                if nft_user_id:
+                    await self.send(json.dumps({
+                        'status': 'incorrect',
+                        'message': 'This NFT is already linked to another user.'
+                    }))
+                else:
+                    address = await mint_nft(user_id, connector.account.address)
+                    user.is_ton_connected = True
+                    await sync_to_async(user.save)()
+                    await self.send(json.dumps({
+                        'status': 'minted',
+                        'address': address,
+                    }))
+            return
 
-                        if user.is_ton_connected:
-                            if nft_user_id == user_id:
-                                token = secrets.token_urlsafe(32)
-                                await database_sync_to_async(WebSocketAuthToken.objects.create)(
-                                    token=token,
-                                    user=user,
-                                    expires_at=timezone.now() + timedelta(minutes=5)
-                                )
-                                await self.send(json.dumps({
-                                    'status': 'authenticated',
-                                    'user_id': user.id,
-                                    'auth_token': token,
-                                }))
-                            else:
-                                await self.send(json.dumps({
-                                    'status': 'incorrect',
-                                    'message': 'This NFT is linked to another user.'
-                                }))
-                        else:
-                            if nft_user_id:
-                                await self.send(json.dumps({
-                                    'status': 'incorrect',
-                                    'message': 'This NFT is already linked to another user.'
-                                }))
-                            else:
-                                address = await mint_nft(user_id, connector.account.address)
-                                user.is_ton_connected = True
-                                await sync_to_async(user.save)()
-                                await self.send(json.dumps({
-                                    'status': 'minted',
-                                    'address': address,
-                                }))
-                        return
-
-            await self.send(json.dumps({'status': 'timeout'}))
+        await self.send(json.dumps({'status': 'timeout'}))

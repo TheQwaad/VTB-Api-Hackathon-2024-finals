@@ -69,8 +69,8 @@ def complete_login(request):
         if not auth_token:
             return JsonResponse({'status': 'error', 'message': 'Auth token is required'}, status=400)
         try:
-            token_obj = WebSocketAuthToken.objects.get(token=auth_token, used=False)
-            if token_obj.expires_at < timezone.now():
+            token_obj: WebSocketAuthToken = WebSocketAuthToken.objects.get(token=auth_token, used=False)
+            if not token_obj.is_valid():
                 return JsonResponse({'status': 'error', 'message': 'Auth token expired'}, status=400)
             login(request, token_obj.user)
             token_obj.used = True

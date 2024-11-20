@@ -23,7 +23,7 @@ class NftAuthUserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data['password'] = NftAuthUser.make_password(validated_data['password'])
-        user: StoryAuthUser = NftAuthUser.objects.create(**validated_data)
+        user: NftAuthUser = NftAuthUser.objects.create(**validated_data)
         return user
 
 

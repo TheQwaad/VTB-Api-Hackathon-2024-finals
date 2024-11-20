@@ -64,7 +64,7 @@ class VerifyMobileAppUserSerializer(serializers.Serializer):
     def __init__(self, user: BaseUser, **kwargs):
         super().__init__(**kwargs)
         self.__user = user
-        if not user.is_story_auth_enabled():
+        if not user.is_story_auth_enabled:
             raise ValidationError('Cannot verify app for user with no story auth')
 
     def validate_token(self, token: str) -> str:

@@ -11,6 +11,7 @@ from rest_framework.serializers import ValidationError
 from datetime import timedelta
 from django.utils.timezone import now
 from base.services.auth_services import StoryAuthService
+from django.core.exceptions import ObjectDoesNotExist
 
 
 class CustomManager(models.Manager):
@@ -59,20 +60,50 @@ class BaseUser(AbstractBaseUser):
         self.save()
 
     def is_story_auth_enabled(self) -> bool:
-        return self.get_story_auth_user() is not None
+        return self.get_story_auth_method() is not None
 
-    def get_story_auth_user(self) -> StoryAuthUser | None:
-        return StoryAuthUser.objects.get(baseuser_ptr_id=self.id)
+    def get_story_auth_method(self) -> StoryAuthMethod | None:
+        try:
+            return self.story_auth_method
+        except ObjectDoesNotExist:
+            return None
 
     def is_nft_auth_enabled(self) -> bool:
-        return self.get_nft_auth_user() is not None
+        return self.get_nft_auth_method() is not None
 
-    def get_nft_auth_user(self) -> StoryAuthUser | None:
-        return NftAuthUser.objects.get(baseuser_ptr_id=self.id)
+    def get_nft_auth_method(self) -> NftAuthMethod | None:
+        try:
+            return self.nft_auth_method
+        except ObjectDoesNotExist:
+            return None
+
+
+class StoryAuthMethod(models.Model):
+    user = models.OneToOneField(BaseUser, on_delete=models.CASCADE)
+    mobile_app_token = models.TextField('mobile_app_token', null=True, default=None)
+    mobile_identifier = models.TextField('mobile_identifier', null=True, default=None)
+
+    objects = CustomManager()
+
+    @classmethod
+    def get_by_mobile_credentials(cls, jwt: str, mobile_identifier: str) -> BaseUser:
+        return cls.objects.get_or_fail(jwt_token=jwt, mobile_identifier=mobile_identifier).user
+
+    def is_mobile_verified(self) -> bool:
+        return self.mobile_identifier is not None
+
+    def regenerate_app_token(self) -> None:
+        self.mobile_app_token = get_random_string(length=32)
+        self.save()
+
+    def regenerate_story(self) -> None:
+        self.user.story_set.all().delete()
+        Story.generate_story(self.user)
 
 
 class StoryAuthUser(BaseUser):
     """
+    todo DEPRECATED
     User who implement 2fa auth via stories
     property: story_set
     """
@@ -104,7 +135,7 @@ class Story(models.Model):
     EXPIRATION_TIME = 5
     __OPTION_DELIMITER = '#####'
 
-    user = models.ForeignKey(StoryAuthUser, on_delete=models.CASCADE)
+    user = models.ForeignKey(BaseUser, on_delete=models.CASCADE)
     story = models.TextField('story', max_length=2000, null=False)
     correct_options: str = models.TextField('correct_options', max_length=1000, null=False)
     incorrect_options: str = models.TextField('incorrect_options', max_length=1000, null=False)
@@ -128,7 +159,7 @@ class Story(models.Model):
         self.correct_options = self.__OPTION_DELIMITER.join(options)
 
     @classmethod
-    def generate_story(cls, user: StoryAuthUser) -> Story:
+    def generate_story(cls, user: BaseUser) -> Story:
         auth_service = StoryAuthService()
         auth_service.gen_story()
 
@@ -140,19 +171,24 @@ class Story(models.Model):
         return story.save()
 
 
+class NftAuthMethod(models.Model):
+    user = models.OneToOneField(BaseUser, on_delete=models.CASCADE)
+    is_ton_connected = models.BooleanField('is_ton_connected', null=False, default=False)
+
+    objects = CustomManager()
+
+
 class NftAuthUser(BaseUser):
     """
+        todo: DEPRECATED
        User who implement 2fa auth via TON
     """
     is_ton_connected = models.BooleanField('is_ton_connected', null=False, default=False)
 
 
-User = get_user_model()
-
-
 class WebSocketAuthToken(models.Model):
     token = models.CharField(max_length=64, unique=True, null=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(BaseUser, on_delete=models.CASCADE)
     expires_at = models.DateTimeField(null=False, default=expriration_time)
     used = models.BooleanField(default=False, null=False)
 

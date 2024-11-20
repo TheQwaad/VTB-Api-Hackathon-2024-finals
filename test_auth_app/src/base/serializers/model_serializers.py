@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from base.models import StoryAuthUser, BaseUser, NftAuthUser
+from base.models import *
 from django.contrib.auth.hashers import make_password
 
 
@@ -24,11 +24,11 @@ class RegisterUserSerializer(serializers.Serializer):
         user.regenerate_jwt()
 
         if is_story_auth:
-            story_auth_user: StoryAuthUser = StoryAuthUser.objects.create(baseuser_ptr_id=user.id)
-            story_auth_user.regenerate_app_token()
+            story_auth_method: StoryAuthMethod = StoryAuthMethod.objects.create(user=user)
+            story_auth_method.regenerate_app_token()
 
         if is_nft_auth:
-            NftAuthUser.objects.create(baseuser_ptr_id=user.id)
+            NftAuthMethod.objects.create(user=user)
 
         raise ValueError(user.__dict__)
         return user

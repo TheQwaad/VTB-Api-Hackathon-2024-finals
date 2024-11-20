@@ -57,7 +57,7 @@ class LoginConfirmView(APIView):
         user: BaseUser = BaseUser.objects.get_or_fail(id=user_id)
         if not user.is_story_auth_enabled:
             raise ValidationError('Cannot check story for user with no story')
-        story = user.get_story_auth_method().story_set.get()
+        story = user.story_set.get()
         if story is None or story.is_expired():
             raise ValidationError('Your story verification time expired')
         if chosen_option not in story.get_correct_options():

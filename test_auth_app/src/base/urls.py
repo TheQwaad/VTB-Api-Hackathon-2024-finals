@@ -17,6 +17,7 @@ urlpatterns = [
     path("story/verify_app/<int:user_id>", story_auth_views.VerifyAppView.as_view(), name="auth.verify_app"),
     path("story/login_confirm/<int:user_id>", story_auth_views.LoginConfirmView.as_view(), name="auth.login_confirm"),
     path("story/story/show", story_auth_views.GetStoryView.as_view(), name="story.show"),
+    path("story/is_verified/<int:user_id>", story_auth_views.IsAppVerifiedView.as_view(), name="story.is_verified"),
 
     # NFT auth flow
     path("nft/verify_app/<int:user_id>", nft_auth_views.VerifyRegisterView.as_view(), name="nft_auth.verify_app"),

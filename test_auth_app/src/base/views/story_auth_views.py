@@ -15,7 +15,7 @@ class VerifyAppView(APIView):
         if not user.is_story_auth_enabled:
             raise ValidationError('Cannot verify app for user with no story auth enabled')
         img_html = QrService.generate_mobile_verify_qr(user)
-        return render(request, 'story_auth/verify_app.html', {'img': img_html})
+        return render(request, 'story_auth/verify_app.html', {'img': img_html, 'user_id': user_id})
 
     def post(self, request: Request, user_id: int):
         try:
@@ -26,6 +26,15 @@ class VerifyAppView(APIView):
             return Response(data={'jwt': user.jwt_token})
         except ValidationError as e:
             return Response(data={'error': e.detail})
+
+
+class IsAppVerifiedView(APIView):
+    def get(self, user_id):
+        user = BaseUser.objects.get_or_fail(id=user_id)
+        return Response(data={
+            'verified': user.is_register_complete(),
+            'redirect': user.get_register_redirect_str()
+        })
 
 
 class LoginConfirmView(APIView):

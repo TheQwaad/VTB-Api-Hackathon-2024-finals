@@ -74,6 +74,16 @@ class BaseUser(AbstractBaseUser):
             return redirect('nft_auth.verify_app', user_id=self.id)
         return None
 
+    def get_register_redirect_str(self) -> str | None:
+        from django.urls import reverse
+        story_auth_method = self.get_story_auth_method()
+        if story_auth_method is not None and not story_auth_method.is_mobile_verified():
+            return reverse('auth.verify_app', kwargs={'user_id': self.id})
+        nft_auth_method = self.get_nft_auth_method()
+        if nft_auth_method is not None and not nft_auth_method.is_ton_connected:
+            return reverse('nft_auth.verify_app', kwargs={'user_id': self.id})
+        return reverse('index')
+
     def regenerate_jwt(self) -> None:
         self.jwt_token = get_random_string(length=32)
         self.save()

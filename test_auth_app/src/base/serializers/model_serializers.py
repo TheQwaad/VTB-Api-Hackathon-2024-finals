@@ -3,7 +3,7 @@ from base.models import StoryAuthUser, BaseUser, NftAuthUser
 from django.contrib.auth.hashers import make_password
 
 
-class RegisterUserSerializer(serializers.ModelSerializer):
+class RegisterUserSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150, allow_null=False, required=True)
     password = serializers.CharField(max_length=50, min_length=4, allow_null=False, required=True)
     story_auth = serializers.CharField(allow_null=True)

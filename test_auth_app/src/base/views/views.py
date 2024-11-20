@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import render, redirect
 from base.models import StoryAuthUser, NftAuthUser, BaseUser
-from base.serializers.model_serializers import StoryAuthUserSerializer
+from base.serializers.model_serializers import RegisterUserSerializer
 
 
 class TestView(APIView):
@@ -38,7 +38,7 @@ class RegisterView(APIView):
         return render(request, 'register.html')
 
     def post(self, request: Request):
-        user_serializer = StoryAuthUserSerializer(data=request.data)
+        user_serializer = RegisterUserSerializer(data=request.data)
         user_serializer.is_valid(raise_exception=True)
-        user: StoryAuthUser = user_serializer.save()
+        user: BaseUser = user_serializer.save()
         return redirect("auth.verify_app", user_id=user.id)

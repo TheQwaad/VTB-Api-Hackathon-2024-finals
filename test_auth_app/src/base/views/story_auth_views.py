@@ -42,7 +42,7 @@ class LoginConfirmView(View):
     async def get(self, request: Request, user_id: int):
         from asgiref.sync import sync_to_async
         user: BaseUser = await sync_to_async(BaseUser.objects.get_or_fail)(id=user_id)
-        if not user.is_story_auth_enabled:
+        if await sync_to_async(user.get_story_auth_method)() is None:
             raise ValidationError('Cannot check story for user with no story')
         story = await sync_to_async(user.story_set.get)()
         options = await sync_to_async(story.get_correct_options)()[:1] + await sync_to_async(story.get_incorrect_options)()
@@ -59,7 +59,7 @@ class LoginConfirmView(View):
             raise ValidationError('You must choose story option')
 
         user: BaseUser = await sync_to_async(BaseUser.objects.get_or_fail)(id=user_id)
-        if not user.is_story_auth_enabled:
+        if await sync_to_async(user.get_story_auth_method)() is None:
             raise ValidationError('Cannot check story for user with no story')
         story = await sync_to_async(user.story_set.get)()
         if story is None or await sync_to_async(story.is_expired)():

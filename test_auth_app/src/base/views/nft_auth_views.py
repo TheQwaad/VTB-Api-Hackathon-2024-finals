@@ -10,7 +10,7 @@ from rest_framework.request import Request
 from rest_framework.views import APIView
 from django.contrib.auth import login, logout
 from django.shortcuts import render, redirect
-from base.models import NftAuthUser, WebSocketAuthToken
+from base.models import *
 from base.services.tonconnect_handlers.tonconnect_helper import TonConnectWrapper
 
 
@@ -23,7 +23,7 @@ class VerifyRegisterView(View):
             response = await sync_to_async(render)(request, "nft_auth/verify_app.html",
                                                    {"wallet_names": wallet_names, "user_id": user_id})
             return response
-        except NftAuthUser.DoesNotExist:
+        except BaseUser.DoesNotExist:
             return await sync_to_async(HttpResponseServerError)("User not found")
         except Exception as e:
             return await sync_to_async(HttpResponseServerError)(f"Error: {str(e)}")

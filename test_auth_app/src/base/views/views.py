@@ -9,7 +9,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.views import APIView
 from django.shortcuts import render, redirect
-from base.models import NftAuthUser
 from base.serializers.model_serializers import LoginUserSerializer
 from base.services.tonconnect_handlers.tonconnect_helper import TonConnectWrapper
 
@@ -77,7 +76,7 @@ class LoginView(View):
             response = await sync_to_async(render)(request, "nft_auth/verify_app.html",
                                                    {"wallet_names": wallet_names, "user_id": user.id})
             return response
-        except NftAuthUser.DoesNotExist:
+        except BaseUser.DoesNotExist:
             return await sync_to_async(HttpResponseServerError)("User not found")
         except Exception as e:
             return await sync_to_async(HttpResponseServerError)(f"Error: {str(e)}")

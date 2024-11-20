@@ -214,14 +214,6 @@ class NftAuthMethod(models.Model):
     objects = CustomManager()
 
 
-class NftAuthUser(BaseUser):
-    """
-        todo: DEPRECATED
-       User who implement 2fa auth via TON
-    """
-    is_ton_connected = models.BooleanField('is_ton_connected', null=False, default=False)
-
-
 class WebSocketAuthToken(models.Model):
     token = models.CharField(max_length=64, unique=True, null=False)
     user = models.ForeignKey(BaseUser, on_delete=models.CASCADE)

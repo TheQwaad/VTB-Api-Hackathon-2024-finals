@@ -64,7 +64,9 @@ class LoginConfirmView(APIView):
             raise ValidationError('You chose incorrect option')
 
         if user.is_nft_auth_enabled:
-            return redirect('auth.login')
+            from base.views.views import LoginView
+            request.POST['user_id'] = user_id
+            return LoginView().post(request)
 
         login(request, user)
         return redirect('profile')

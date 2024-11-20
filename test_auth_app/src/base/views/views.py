@@ -53,10 +53,14 @@ class LoginView(View):
         return render(request, "login.html")
 
     async def post(self, request: Request):
-        serializer = LoginUserSerializer(data=request.POST)
-        user = await sync_to_async(serializer.get_authenticated_user)()
-        if not await sync_to_async(user.is_register_complete)():
-            return await sync_to_async(user.get_register_redirect)()
+        user_id = await sync_to_async(request.POST.get)('user_id')
+        if user_id is None:
+            serializer = LoginUserSerializer(data=request.POST)
+            user = await sync_to_async(serializer.get_authenticated_user)()
+            if not await sync_to_async(user.is_register_complete)():
+                return await sync_to_async(user.get_register_redirect)()
+        else:
+            user = await sync_to_async(BaseUser.objects.get_or_fail)(id=user_id)
 
         if user.is_story_auth_enabled:
             auth_method = await sync_to_async(user.get_story_auth_method)()

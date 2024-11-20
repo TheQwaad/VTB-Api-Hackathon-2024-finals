@@ -11,7 +11,6 @@ from rest_framework.views import APIView
 from django.contrib.auth import login, logout
 from django.shortcuts import render, redirect
 from base.models import NftAuthUser, WebSocketAuthToken
-from base.serializers.model_serializers import LoginUserSerializer, NftAuthUserSerializer
 from base.services.tonconnect_handlers.tonconnect_helper import TonConnectWrapper
 
 

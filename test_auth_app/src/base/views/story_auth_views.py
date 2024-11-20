@@ -80,7 +80,7 @@ class GetStoryView(APIView):
         try:
             serializer = MobileSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-            user = StoryAuthUser.get_by_mobile_credentials(
+            user = StoryAuthMethod.get_by_mobile_credentials(
                 serializer.validated_data['jwt_token'],
                 serializer.validated_data['mobile_identifier']
             )

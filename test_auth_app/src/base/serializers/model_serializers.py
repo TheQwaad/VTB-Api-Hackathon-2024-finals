@@ -35,30 +35,6 @@ class RegisterUserSerializer(serializers.Serializer):
         return user
 
 
-class StoryAuthUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = StoryAuthUser
-        fields = '__all__'
-
-    def create(self, validated_data):
-        validated_data['password'] = StoryAuthUser.make_password(validated_data['password'])
-        user: StoryAuthUser = StoryAuthUser.objects.create(**validated_data)
-        user.regenerate_app_token()
-        user.regenerate_jwt()
-        return user
-
-
-class NftAuthUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = NftAuthUser
-        fields = '__all__'
-
-    def create(self, validated_data):
-        validated_data['password'] = NftAuthUser.make_password(validated_data['password'])
-        user: NftAuthUser = NftAuthUser.objects.create(**validated_data)
-        return user
-
-
 class VerifyMobileAppUserSerializer(serializers.Serializer):
     token = serializers.CharField(max_length=1500, required=True, allow_null=False)
     mobile_identifier = serializers.CharField(max_length=1500, required=True, allow_null=False)

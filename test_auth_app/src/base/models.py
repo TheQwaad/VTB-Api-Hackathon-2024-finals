@@ -118,7 +118,12 @@ class StoryAuthMethod(models.Model):
 
     @classmethod
     def get_by_mobile_credentials(cls, jwt: str, mobile_identifier: str) -> BaseUser:
-        return cls.objects.get_or_fail(jwt_token=jwt, mobile_identifier=mobile_identifier).user
+        user: BaseUser = BaseUser.objects.get_or_fail(jwt_token=jwt)
+        if not user.is_story_auth_enabled:
+            raise ValidationError('cannot get user without story auth')
+        if user.get_story_auth_method().mobile_identifier != mobile_identifier:
+            raise ValidationError('incorrect mobile id')
+        return user
 
     def is_mobile_verified(self) -> bool:
         return self.mobile_identifier is not None

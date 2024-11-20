@@ -54,7 +54,7 @@ class LoginConfirmView(APIView):
         if chosen_option is None:
             raise ValidationError('You must choose story option')
 
-        user: BaseUser = StoryAuthUser.objects.get_or_fail(id=user_id)
+        user: BaseUser = BaseUser.objects.get_or_fail(id=user_id)
         if not user.is_story_auth_enabled:
             raise ValidationError('Cannot check story for user with no story')
         story = user.get_story_auth_method().story_set.get()

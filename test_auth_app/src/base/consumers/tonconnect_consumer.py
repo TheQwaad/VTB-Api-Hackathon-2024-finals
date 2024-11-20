@@ -109,7 +109,8 @@ class TonConnectConsumer(AsyncWebsocketConsumer):
                     }))
                 else:
                     address = await mint_nft(user_id, connector.account.address)
-                    user.is_ton_connected = True
+                    user.nftauthmethod.is_ton_connected = True
+                    await sync_to_async(user.nftauthmethod.save)()
                     await sync_to_async(user.save)()
                     await self.send(json.dumps({
                         'status': 'minted',

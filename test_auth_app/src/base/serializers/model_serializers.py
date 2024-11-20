@@ -74,11 +74,12 @@ class VerifyMobileAppUserSerializer(serializers.Serializer):
 
     def verify_mobile_app(self) -> BaseUser:
         self.is_valid(raise_exception=True)
-        if self.__user.get_story_auth_method().is_mobile_verified():
+        auth_method = self.__user.get_story_auth_method()
+        if auth_method.is_mobile_verified():
             raise serializers.ValidationError('You cannot link more than one devices')
-        self.__user.mobile_identifier = self.validated_data['mobile_identifier']
-        self.__user.mobile_app_token = None
-        self.__user.save()
+        auth_method.mobile_identifier = self.validated_data['mobile_identifier']
+        auth_method.mobile_app_token = None
+        auth_method.save()
         return self.__user
 
     def update(self, instance, validated_data):

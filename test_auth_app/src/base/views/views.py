@@ -61,13 +61,13 @@ class LoginView(View):
         else:
             user = await sync_to_async(BaseUser.objects.get_or_fail)(id=user_id)
 
-        if user.is_story_auth_enabled:
+        if await sync_to_async(user.get_story_auth_method)() is not None:
             auth_method = await sync_to_async(user.get_story_auth_method)()
             await sync_to_async(auth_method.regenerate_story)()
             return await sync_to_async(redirect)('auth.login_confirm', user_id=user.id)
 
         serializer = LoginUserSerializer(data=request.POST)
-        serializer.is_valid(raise_exception=True)
+        await sync_to_async(serializer.is_valid)(raise_exception=True)
         try:
             connector = TonConnectWrapper(user_id=user.id)
             wallets = await connector.get_wallet_list()

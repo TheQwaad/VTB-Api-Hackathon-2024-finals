@@ -29,7 +29,7 @@ class VerifyAppView(APIView):
 
 
 class IsAppVerifiedView(APIView):
-    def get(self, user_id):
+    def get(self, request: Request, user_id: int):
         user = BaseUser.objects.get_or_fail(id=user_id)
         return Response(data={
             'verified': user.is_register_complete(),

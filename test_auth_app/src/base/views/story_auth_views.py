@@ -84,8 +84,8 @@ class GetStoryView(APIView):
                 serializer.validated_data['jwt_token'],
                 serializer.validated_data['mobile_identifier']
             )
-            story = user.story_set.get()
-            if story is None or story.is_expired():
+            story = Story.objects.filter(user_id=user.id, expires_at__gte=now()).first()
+            if story is None:
                 raise ValidationError('All your stories expired')
 
             user.regenerate_jwt()

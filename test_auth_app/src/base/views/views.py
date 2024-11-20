@@ -69,8 +69,7 @@ class LoginView(View):
         if await sync_to_async(user.get_nft_auth_method)() is None:
             await sync_to_async(login)(request, user)
             return await sync_to_async(redirect)('profile')
-        serializer = LoginUserSerializer(data=request.POST)
-        await sync_to_async(serializer.is_valid)(raise_exception=True)
+
         try:
             connector = TonConnectWrapper(user_id=user.id)
             wallets = await connector.get_wallet_list()

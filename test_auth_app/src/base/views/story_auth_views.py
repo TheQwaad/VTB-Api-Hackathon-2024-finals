@@ -69,7 +69,7 @@ class LoginConfirmView(View):
 
         if await sync_to_async(user.get_nft_auth_method)() is not None:
             from base.views.views import LoginView
-            return await sync_to_async(LoginView.as_view())(Request(HttpRequest()), user_id=user_id)
+            return await sync_to_async(LoginView().post)(HttpRequest(), user_id=user_id)
 
         await sync_to_async(login)(request, user)
         return await sync_to_async(redirect)('profile')

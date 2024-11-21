@@ -22,5 +22,6 @@ urlpatterns = [
     # NFT auth flow
     path("nft/verify_app/<int:user_id>", nft_auth_views.VerifyRegisterView.as_view(), name="nft_auth.verify_app"),
     path('nft/complete-login/', nft_auth_views.complete_login, name='complete_login'),
+    path('nft/get-ton-proof-payload/', nft_auth_views.get_ton_proof_payload, name='get_ton_proof_payload'),
 
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

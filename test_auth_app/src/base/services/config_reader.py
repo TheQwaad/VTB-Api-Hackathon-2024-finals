@@ -4,8 +4,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     is_testnet: bool
-    tonconnect_manifest_url: SecretStr
-    tonconnect_key: SecretStr
     tonapi_key: SecretStr
     nft_collection_address: SecretStr
     wallet_mnemonic: SecretStr

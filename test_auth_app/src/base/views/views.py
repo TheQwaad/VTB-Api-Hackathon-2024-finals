@@ -10,7 +10,6 @@ from rest_framework.request import Request
 from rest_framework.views import APIView
 from django.shortcuts import render, redirect
 from base.serializers.model_serializers import LoginUserSerializer
-from base.services.tonconnect_handlers.tonconnect_helper import TonConnectWrapper
 
 
 class TestView(APIView):
@@ -47,39 +46,31 @@ class RegisterView(APIView):
         return user.get_register_redirect()
 
 
-class LoginView(View):
-    async def get(self, request: Request):
+class LoginView(APIView):
+    def get(self, request):
         return render(request, "login.html")
 
-    async def post(self, request: Request, user_id = None):
-        if user_id is None:
-            serializer = LoginUserSerializer(data=request.POST)
-            user = await sync_to_async(serializer.get_authenticated_user)()
-            if not await sync_to_async(user.is_register_complete)():
-                return await sync_to_async(user.get_register_redirect)()
-        else:
-            user = await sync_to_async(BaseUser.objects.get_or_fail)(id=user_id)
-
-        if user_id is None and await sync_to_async(user.get_story_auth_method)() is not None:
-            auth_method = await sync_to_async(user.get_story_auth_method)()
-            await sync_to_async(auth_method.regenerate_story)()
-            return await sync_to_async(redirect)('auth.login_confirm', user_id=user.id)
-
-        if await sync_to_async(user.get_nft_auth_method)() is None:
-            await sync_to_async(login)(request, user)
-            return await sync_to_async(redirect)('profile')
-
+    def post(self, request, user_id=None):
         try:
-            connector = TonConnectWrapper(user_id=user.id)
-            wallets = await connector.get_wallet_list()
-            wallet_names = [wallet["name"] for wallet in wallets]
-            response = await sync_to_async(render)(request, "nft_auth/verify_app.html",
-                                                   {"wallet_names": wallet_names, "user_id": user.id})
-            return response
+            if user_id is None:
+                serializer = LoginUserSerializer(data=request.POST)
+                user = serializer.get_authenticated_user()
+                if not user.is_register_complete():
+                    return user.get_register_redirect()
+            else:
+                user = BaseUser.objects.get(id=user_id)
+            if user_id is None and user.get_story_auth_method() is not None:
+                auth_method = user.get_story_auth_method()
+                auth_method.regenerate_story()
+                return redirect('auth.login_confirm', user_id=user.id)
+            if user.get_nft_auth_method() is None:
+                login(request, user)
+                return redirect('profile')
+            return render(request, "nft_auth/verify_app.html", {"user_id": user.id})
         except BaseUser.DoesNotExist:
-            return await sync_to_async(HttpResponseServerError)("User not found")
+            return HttpResponseServerError("User not found")
         except Exception as e:
-            return await sync_to_async(HttpResponseServerError)(f"Error: {str(e)}")
+            return HttpResponseServerError(f"Error: {str(e)}")
 
 
 class LogoutView(APIView):

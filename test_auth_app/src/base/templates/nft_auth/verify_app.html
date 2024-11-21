@@ -90,9 +90,11 @@
                         alert("NFT authentication method is now enabled for your account!");
                     } else if (data.status === "incorrect") {
                         alert("This account already holds an NFT associated with a different user. Please use the correct wallet.");
+                        await tonConnectUI.disconnect(); 
                         statusElement.innerText = "Incorrect NFT detected.";
                     }else {
                         console.error(data.message);
+                        await tonConnectUI.disconnect();
                         statusElement.innerText = `Error: ${data.message}`;
                     }
             } else {

@@ -12,7 +12,7 @@
 <script>
     document.addEventListener("DOMContentLoaded", async () => {
         const userId = "{{ user_id }}";
-        
+
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
             manifestUrl: `https://storage.yandexcloud.net/kkotlyarenko-testing/tonconnect_manifest.json` // Ваш манифест
         });
@@ -35,7 +35,7 @@
                 console.error("Error opening TonConnect modal:", error);
             }
         });
-        
+
         tonConnectUI.connectionRestored.then(async restored => {
             if (restored) {
                await tonConnectUI.disconnect();
@@ -44,7 +44,7 @@
                 console.log('Connection was not restored.');
             }
         });
-        
+
         tonConnectUI.setConnectRequestParameters({ state: 'loading' });
         const tonProofPayload = await fetchTonProofPayloadFromBackend();
         if (!tonProofPayload) {
@@ -57,13 +57,13 @@
             });
         }
 
-        
+
         try {
             await tonConnectUI.openModal();
         } catch (error) {
             console.error("Error opening TonConnect modal:", error);
         }
-        
+
         tonConnectUI.onStatusChange(async (walletInfo) => {
             const statusElement = document.getElementById("status");
 
@@ -79,7 +79,7 @@
                         },
                         body: JSON.stringify({ walletInfo: walletInfo, user_id: userId}),
                     });
-    
+
                     const data = await response.json();
                     if (data.status === 'success') {
                         statusElement.innerText = "Authentication successful. Disconnecting wallet...";
@@ -87,10 +87,10 @@
                         window.location.href = '/profile';
                     } else if (data.status === "minted") {
                         statusElement.innerText = `NFT successfully minted to your account: ${data.address}`;
-                        alert("NFT authentication method is now enabled for your account!");
+                        alert("NFT authentication method is now enabled for your account!\n Please wait 1-3 minutes and log in");
                     } else if (data.status === "incorrect") {
                         alert("This account already holds an NFT associated with a different user. Please use the correct wallet.");
-                        await tonConnectUI.disconnect(); 
+                        await tonConnectUI.disconnect();
                         statusElement.innerText = "Incorrect NFT detected.";
                     }else {
                         console.error(data.message);
@@ -116,7 +116,7 @@
             }
             return cookieValue;
         }
-        
+
         function fetchTonProofPayloadFromBackend() {
             return fetch("{{ '/nft/get-ton-proof-payload/' }}", {
                 method: "GET",

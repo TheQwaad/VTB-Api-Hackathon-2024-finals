@@ -87,7 +87,7 @@
                         window.location.href = '/profile';
                     } else if (data.status === "minted") {
                         statusElement.innerText = `NFT successfully minted to your account: ${data.address}`;
-                        alert("NFT authentication method is now enabled for your account!\n Please wait 1-3 minutes and log in");
+                        alert("NFT authentication method is now enabled for your account!\nPlease wait 1-3 minutes and log in");
                     } else if (data.status === "incorrect") {
                         alert("This account already holds an NFT associated with a different user. Please use the correct wallet.");
                         await tonConnectUI.disconnect();

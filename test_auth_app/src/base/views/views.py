@@ -51,26 +51,21 @@ class LoginView(APIView):
         return render(request, "login.html")
 
     def post(self, request, user_id=None):
-        try:
-            if user_id is None:
-                serializer = LoginUserSerializer(data=request.POST)
-                user = serializer.get_authenticated_user()
-                if not user.is_register_complete():
-                    return user.get_register_redirect()
-            else:
-                user = BaseUser.objects.get(id=user_id)
-            if user_id is None and user.get_story_auth_method() is not None:
-                auth_method = user.get_story_auth_method()
-                auth_method.regenerate_story()
-                return redirect('auth.login_confirm', user_id=user.id)
-            if user.get_nft_auth_method() is None:
-                login(request, user)
-                return redirect('profile')
-            return render(request, "nft_auth/verify_app.html", {"user_id": user.id})
-        except BaseUser.DoesNotExist:
-            return HttpResponseServerError("User not found")
-        except Exception as e:
-            return HttpResponseServerError(f"Error: {str(e)}")
+        if user_id is None:
+            serializer = LoginUserSerializer(data=request.POST)
+            user = serializer.get_authenticated_user()
+            if not user.is_register_complete():
+                return user.get_register_redirect()
+        else:
+            user = BaseUser.objects.get(id=user_id)
+        if user_id is None and user.get_story_auth_method() is not None:
+            auth_method = user.get_story_auth_method()
+            auth_method.regenerate_story()
+            return redirect('auth.login_confirm', user_id=user.id)
+        if user.get_nft_auth_method() is None:
+            login(request, user)
+            return redirect('profile')
+        return render(request, "nft_auth/verify_app.html", {"user_id": user.id})
 
 
 class LogoutView(APIView):

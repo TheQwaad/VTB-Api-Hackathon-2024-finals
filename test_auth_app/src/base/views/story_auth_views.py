@@ -11,12 +11,18 @@ from django.views import View
 
 
 class VerifyAppView(APIView):
+    __MOBILE_APP_URL = 'https://disk.yandex.ru/d/FixHN-NRpjhJ5g'
+
     def get(self, request: Request, user_id: int):
         user: BaseUser = BaseUser.objects.get_or_fail(id=user_id)
         if not user.is_story_auth_enabled:
             raise ValidationError('Cannot verify app for user with no story auth enabled')
         img_html = QrService.generate_mobile_verify_qr(user)
-        return render(request, 'story_auth/verify_app.html', {'img': img_html, 'user_id': user_id})
+        return render(request, 'story_auth/verify_app.html', {
+            'img': img_html,
+            'app_url': self.__MOBILE_APP_URL,
+            'user_id': user_id
+        })
 
     def post(self, request: Request, user_id: int):
         try:

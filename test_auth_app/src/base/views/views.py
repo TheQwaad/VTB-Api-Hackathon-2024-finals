@@ -12,13 +12,6 @@ from django.shortcuts import render, redirect
 from base.serializers.model_serializers import LoginUserSerializer
 
 
-class TestView(APIView):
-    def get(self, request: Request):
-        return Response(data={
-            'user': BaseUser.authenticate('test123', '123456')
-        })
-
-
 class IndexView(APIView):
     def get(self, request: Request):
         users = BaseUser.objects.all()
